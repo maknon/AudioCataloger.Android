@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">مفهرس المحاضرات</string>
+    <string name="title_section1">المشايخ</string>
+    <string name="title_section2">التصانيف</string>
+    <string name="action_about">عن البرنامج</string>
+    <string name="description">رجوع إلى القسم الأعلى</string>
+    <string name="logo">الشعار</string>
+    <string name="recording_title">اختر مجلد</string>
+    <string name="recordingNotification">تنبيه: سيتم إزالة الملفات بإزالة البرنامج إذا كانت في الذاكرة الخارجية</string>
+    <string name="recording_folder_error">لا يمكنك استخدام هذا المجلد. قم باختيار مجلد آخر</string>
+    <string name="create_folder">مجلد جديد</string>
+    <string name="ok">موافق</string>
+    <string name="create_folder_error_already_exists">المجلد موجود مسبقاً</string>
+    <string name="create_folder_success">تم إنشاء المجلد الجديد</string>
+    <string name="create_folder_error">لا يمكن إنشاء المجلد</string>
+    <string name="create_folder_empty">إدخال فارغ. لا يمكن إنشاء المجلد</string>
+    <string name="cancel">إلغاء</string>
+    <string name="save">حفظ</string>
+    <string name="recording_note">عند تحميل الصوتيات سيتم تخزينها في المسار أدناه</string>
+    <string name="up">أعلى</string>
+    <string name="selected_folder">موضع حفظ التسجيل:</string>
+    <string name="open_folder">فتح المجلد</string>
+    <string name="support">الشرح والدعم</string>
+    <string name="audios_path">مسار الصوتيات</string>
+    <string name="search_range">نطاق البحث</string>
+    <string name="player">مشغل الصوتيات</string>
+
+    <string name="default_notification_channel_id">audiocataloger_channel_id</string>
+    <string name="default_notification_channel_name">مشغل الصوتيات</string>
+    <string name="default_notification_group_id">audiocataloger_group_id</string>
+    <string name="default_notification_group_name">مكنون</string>
+
+</resources>

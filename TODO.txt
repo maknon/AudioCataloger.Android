@@ -1,0 +1,2 @@
+- seek timer is not implemented. errors
+	- seekEndhandler is not working to stop audio after period is finished

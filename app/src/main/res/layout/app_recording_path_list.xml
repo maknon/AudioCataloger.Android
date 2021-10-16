@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	tools:context=".AppRecordingPath">
+
+	<androidx.appcompat.widget.AppCompatImageView
+		android:id="@+id/icon"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:padding="15dp"
+		android:background="@android:color/transparent"
+		app:srcCompat="@drawable/outline_sd_card_24" />
+
+	<androidx.appcompat.widget.AppCompatTextView
+		android:id="@+id/Itemname"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layoutDirection="ltr"
+		android:layout_margin="5dp"/>
+
+	<!--
+	<androidx.appcompat.widget.AppCompatTextView
+		android:id="@+id/Itemname"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:drawableTint="@android:color/tab_indicator_text"
+		android:background="@android:color/transparent"
+		android:drawableStart="@drawable/outline_sd_card_black_24"
+		android:layout_margin="5dp"/>
+		-->
+</androidx.appcompat.widget.LinearLayoutCompat>

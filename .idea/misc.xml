@@ -3,6 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/AudioCataloger.Android/app/src/main/res/layout/favorite_listview.xml" value="0.18" />
+        <entry key="..\:/AudioCataloger.Android/app/src/main/res/layout/fegh_listiew.xml" value="0.25" />
+        <entry key="..\:/AudioCataloger.Android/app/src/main/res/layout/feqh_fragment.xml" value="0.25" />
+        <entry key="..\:/AudioCataloger.Android/app/src/main/res/layout/search_listview.xml" value="0.25" />
+        <entry key="..\:/AudioCataloger.Android/app/src/main/res/layout/sheekh_listview.xml" value="0.25" />
         <entry key="..\:/AudioCataloger.Android/app/src/main/res/menu/menu_main.xml" value="0.2" />
       </map>
     </option>

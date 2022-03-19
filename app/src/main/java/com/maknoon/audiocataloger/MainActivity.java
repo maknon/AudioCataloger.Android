@@ -48,7 +48,6 @@ import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -66,13 +65,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.Key;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 
 public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		SheekhListFragment.setOnPlayListener, SearchListFragment.setOnPlayListener,
@@ -246,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 			deleteDatabase(DBHelper.DB_NAME);
 			deleteDatabase(DBHelper.DB_ATTACH_NAME);
 
-			copyDataBase(DBHelper.DB_NAME);
+			copyDataBase(DBHelper.DB_NAME); // TODO: delete db in the asset folder after replacing the app db with it
 			copyDataBase(DBHelper.DB_ATTACH_NAME); // Version 5, divide the DB so that we have Contents table in a separate DB. this allows to delete the DB after creating FTS3 and save 100mb. also it increase the speed by 50% !
 
 			final DBHelper dbHelper = new DBHelper(ctx);

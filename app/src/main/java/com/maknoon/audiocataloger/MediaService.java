@@ -33,11 +33,8 @@ import androidx.media.MediaBrowserServiceCompat;
 import androidx.media.session.MediaButtonReceiver;
 
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ControlDispatcher;
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.PlaybackException;
-import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.audio.AudioAttributes;
@@ -55,7 +52,6 @@ import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.upstream.HttpDataSource.HttpDataSourceException;
 import com.google.android.exoplayer2.util.Util;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -202,7 +198,6 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 		final MediaSessionConnector mediaSessionConnector = new MediaSessionConnector(mediaSession);
 		mediaSessionConnector.setPlayer(mediaPlayer);
 		mediaSessionConnector.setPlaybackPreparer(new MediaSessionConnectorCallback());
-		mediaSessionConnector.setControlDispatcher(new MediaControlDispatcher());
 		/*
 		mediaSessionConnector.setQueueNavigator(new TimelineQueueNavigator(mediaSession)
 		{
@@ -393,142 +388,11 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 		public PendingIntent createCurrentContentIntent(@NonNull Player player)
 		{
 			final Intent intent = new Intent(MediaService.this, MainActivity.class);
-			final PendingIntent contentIntent = PendingIntent.getActivity(MediaService.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+			final PendingIntent contentIntent = PendingIntent.getActivity(MediaService.this, 0, intent,
+					(Util.SDK_INT >= 23) ?
+							PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE :
+							PendingIntent.FLAG_UPDATE_CURRENT);
 			return contentIntent;
-		}
-	}
-
-	public static class MediaControlDispatcher implements ControlDispatcher
-	{
-		@Override
-		public boolean dispatchPrepare(@NonNull Player player)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean dispatchSetPlayWhenReady(@NonNull Player player, boolean playWhenReady)
-		{
-			Log.v(TAG, "dispatchSetPlayWhenReady " + playWhenReady);
-			player.setPlayWhenReady(playWhenReady);
-
-			/* Done now in onNotificationPosted()
-			if(playWhenReady)
-			{
-				//mp_play();
-
-				// Register BECOME_NOISY BroadcastReceiver
-				//Handles headphones coming unplugged. cannot be done through a manifest receiver
-				LocalBroadcastManager.getInstance(MediaService.this).registerReceiver(noisyReceiver, intentFilter);
-			}
-			else
-			{
-				// Take the service out of the foreground, retain the notification
-				stopForeground(false);
-
-				try
-				{
-					// unregister BECOME_NOISY BroadcastReceiver
-					LocalBroadcastManager.getInstance(MediaService.this).unregisterReceiver(noisyReceiver);
-				}
-				catch (IllegalArgumentException e)
-				{
-					e.printStackTrace();
-				}
-			}
-			*/
-			return true;
-		}
-
-		@Override
-		public boolean dispatchSeekTo(Player player, int windowIndex, long positionMs)
-		{
-			player.seekTo(windowIndex, positionMs);
-			return true;
-		}
-
-		@Override
-		public boolean dispatchPrevious(@NonNull Player player)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean dispatchNext(@NonNull Player player)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean dispatchRewind(@NonNull Player player)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean dispatchFastForward(@NonNull Player player)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean dispatchSetRepeatMode(Player player, @Player.RepeatMode int repeatMode)
-		{
-			player.setRepeatMode(repeatMode);
-			return true;
-		}
-
-		@Override
-		public boolean dispatchSetShuffleModeEnabled(Player player, boolean shuffleModeEnabled)
-		{
-			player.setShuffleModeEnabled(shuffleModeEnabled);
-			return true;
-		}
-
-		@Override
-		public boolean dispatchStop(@NonNull Player player, boolean reset)
-		{
-			Log.v(TAG, "dispatchStop " + reset);
-			//mp_stop();
-
-			player.stop(reset);
-
-			/* Done now in onNotificationCancelled()
-			// try-catch to avoid crashing the app in case it is not registered as for the first time for example
-			try
-			{
-				// unregister BECOME_NOISY BroadcastReceiver
-				LocalBroadcastManager.getInstance(MediaService.this).unregisterReceiver(noisyReceiver);
-			}
-			catch (IllegalArgumentException e)
-			{
-				e.printStackTrace();
-			}
-
-			//stopSelf();
-
-			// Take the service out of the foreground
-			stopForeground(true);
-			*/
-			return true;
-		}
-
-		@Override
-		public boolean dispatchSetPlaybackParameters(@NonNull Player player, @NonNull PlaybackParameters playbackParameters)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean isRewindEnabled()
-		{
-			return false;
-		}
-
-		@Override
-		public boolean isFastForwardEnabled()
-		{
-			return false;
 		}
 	}
 
@@ -539,7 +403,9 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 		{
 			final Intent intent = new Intent("saveFavorite").setPackage(context.getPackageName());
 			final PendingIntent pendingIntent = PendingIntent.getBroadcast(
-					context, instanceId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+					context, instanceId, intent, (Util.SDK_INT >= 23) ?
+							PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE :
+							PendingIntent.FLAG_CANCEL_CURRENT);
 
 			final NotificationCompat.Action action = new NotificationCompat.Action(
 					R.drawable.outline_bookmark_24,
@@ -699,7 +565,7 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 		}
 
 		@Override
-		public boolean onCommand(@NonNull Player player, @NonNull ControlDispatcher controlDispatcher, @NonNull String command, @Nullable Bundle extras, @Nullable ResultReceiver cb)
+		public boolean onCommand(@NonNull Player player, @NonNull String command, @Nullable Bundle extras, @Nullable ResultReceiver cb)
 		{
 			command(command, extras);
 			Log.v(TAG, "MediaSessionConnectorCallback onCommand " + command);
@@ -735,7 +601,7 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 
 			// This is the MediaSource representing the media to be played
 			final MediaSource videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-					.createMediaSource(Uri.parse(url));
+					.createMediaSource(com.google.android.exoplayer2.MediaItem.fromUri(Uri.parse(url)));
 
 			mediaPlayer.setPlayWhenReady(true);
 
@@ -853,7 +719,7 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 				else
 					//return new DefaultDataSource(this, Util.getUserAgent(this, getString(R.string.app_name)), false);
 					return new FileDataSource();
-			}).createMediaSource(Uri.parse(url));
+			}).createMediaSource(com.google.android.exoplayer2.MediaItem.fromUri(Uri.parse(url)));
 
 			if (offset != 0)
 			{

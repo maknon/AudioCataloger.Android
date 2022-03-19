@@ -14,12 +14,17 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.media.session.MediaButtonReceiver;
 
+import com.google.android.exoplayer2.util.Util;
+
 public class MediaStyleHelper
 {
 	public static NotificationCompat.Builder from(final Context context, final MediaSessionCompat mediaSession)
 	{
 		final Intent intent = new Intent(context, MainActivity.class);
-		final PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		final PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent,
+				(Util.SDK_INT >= 23) ?
+						PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE :
+						PendingIntent.FLAG_UPDATE_CURRENT);
 
 		final MediaControllerCompat controller = mediaSession.getController();
 		final MediaMetadataCompat mediaMetadata = controller.getMetadata();

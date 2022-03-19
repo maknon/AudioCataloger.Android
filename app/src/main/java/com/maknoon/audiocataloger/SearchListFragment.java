@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +39,7 @@ public class SearchListFragment extends ListFragment
 
 	// This interface to communicate between MainActivity and this fragment
 	private SearchListFragment.setOnPlayListener playCallback;
+
 	void setOnPlayListener(SearchListFragment.setOnPlayListener playCallback)
 	{
 		this.playCallback = playCallback;
@@ -73,7 +75,7 @@ public class SearchListFragment extends ListFragment
 						setListAdapter(null);
 					else
 					{
-						if(input.length() == 1)
+						if (input.length() == 1)
 						{
 							setListAdapter(null);
 							Toast.makeText(mainContext, "جملة البحث من حرفين أو أكثر", Toast.LENGTH_LONG).show();
@@ -83,8 +85,8 @@ public class SearchListFragment extends ListFragment
 					}
 
 					// Hide Keyboard
-					final InputMethodManager imm= (InputMethodManager)mainContext.getSystemService(INPUT_METHOD_SERVICE);
-					if(imm != null)
+					final InputMethodManager imm = (InputMethodManager) mainContext.getSystemService(INPUT_METHOD_SERVICE);
+					if (imm != null)
 						imm.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS); // or context.getCurrentFocus().getWindowToken()
 					return true;
 				}
@@ -103,7 +105,7 @@ public class SearchListFragment extends ListFragment
 					setListAdapter(null);
 				else
 				{
-					if(input.length() == 1)
+					if (input.length() == 1)
 					{
 						setListAdapter(null);
 						Toast.makeText(mainContext, "جملة البحث من حرفين أو أكثر", Toast.LENGTH_LONG).show();
@@ -113,8 +115,8 @@ public class SearchListFragment extends ListFragment
 				}
 
 				// Hide Keyboard
-				final InputMethodManager imm= (InputMethodManager)mainContext.getSystemService(INPUT_METHOD_SERVICE);
-				if(imm != null)
+				final InputMethodManager imm = (InputMethodManager) mainContext.getSystemService(INPUT_METHOD_SERVICE);
+				if (imm != null)
 					imm.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 			}
 		});
@@ -131,7 +133,7 @@ public class SearchListFragment extends ListFragment
 	public void onListItemClick(@NonNull ListView l, @NonNull View v, int position, long id)
 	{
 		final SearchNodeInfo node = (SearchNodeInfo) getListAdapter().getItem(position);
-		if(node.book_name.equals(node.title))
+		if (node.book_name.equals(node.title))
 		{
 			playCallback.play(node.offset, node.duration, toURL_File(node.path, node.fileName), node.sheekh_name, node.book_name + "←" + node.fileName);
 			setCurrentChapter(node.sheekh_name + "←" + node.book_name + "←" + node.fileName, node.fileName, node.path, mainContext);
@@ -148,9 +150,9 @@ public class SearchListFragment extends ListFragment
 		String SQL_Combination = null;
 		boolean wholeDB = true;
 
-		for (int i=0; i < sheekhIds.length; i++)
+		for (int i = 0; i < sheekhIds.length; i++)
 		{
-			if(sheekhSelected[i])
+			if (sheekhSelected[i])
 			{
 				if (SQL_Combination != null)
 					SQL_Combination = SQL_Combination + " OR Sheekh_id:" + sheekhIds[i];
@@ -162,14 +164,27 @@ public class SearchListFragment extends ListFragment
 		}
 
 		// Version 5 to allow '*' for all words search
-		final String search = input.trim().replaceAll(" ", "* ")+"*"; // Suffix is not working with FTS *input
+		//final String search = input.trim().replaceAll(" ", "* ") + "*";
 
-		//final Cursor mCursor = DbHelper.getWordMatches(input, null);
+		// Version 14, multiple search words
+		final String[] tokens = input.trim().split(" ");
+
+		String search = "";
+		for(String txt: tokens)
+		{
+			if(search.isEmpty())
+				search = "Line:" + txt + "*"; // Suffix is not working with FTS *input
+			else
+				search = search + " Line:" + txt + "*";
+		}
+
+		search = "'" + search + (wholeDB ? "" : " " + SQL_Combination) + "'";
+
 		final DBHelper mDbHelper = new DBHelper(mainContext);
 		final SQLiteDatabase db = mDbHelper.getReadableDatabase();
-		final Cursor mCursor = db.rawQuery("SELECT Code, Seq, Offset, Line, Duration, Tafreeg FROM Contents_FTS WHERE Contents_FTS MATCH ? LIMIT 50", new String[]{"Line:"+search+(wholeDB?"":" "+SQL_Combination)});
+		final Cursor mCursor = db.rawQuery("SELECT Code, Seq, Offset, Line, Duration, Tafreeg FROM Contents_FTS WHERE Contents_FTS MATCH " + search + " LIMIT 50", null);
 
-		if(mCursor == null || !mCursor.moveToFirst())
+		if (mCursor == null || !mCursor.moveToFirst())
 			setListAdapter(null);
 		else
 		{

@@ -15,10 +15,10 @@ import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.appcompat.widget.AppCompatTextView;
 import androidx.fragment.app.ListFragment;
 
-import static com.maknoon.audiocataloger.MainActivity.SQL_Combination;
 import static com.maknoon.audiocataloger.MainActivity.setCurrentChapter;
+import static com.maknoon.audiocataloger.MainActivity.sheekhIds;
+import static com.maknoon.audiocataloger.MainActivity.sheekhSelected;
 import static com.maknoon.audiocataloger.MainActivity.toURL_File;
-import static com.maknoon.audiocataloger.MainActivity.wholeDB;
 
 public class FeqhListFragment extends ListFragment
 {
@@ -128,6 +128,22 @@ public class FeqhListFragment extends ListFragment
 
 	void displayFeqhChild(int id, final String name)
 	{
+		String SQL_Combination = null;
+		boolean wholeDB = true;
+
+		for (int i = 0; i < sheekhIds.length; i++)
+		{
+			if (sheekhSelected[i])
+			{
+				if (SQL_Combination != null)
+					SQL_Combination = SQL_Combination + " OR Sheekh_id:" + sheekhIds[i];
+				else
+					SQL_Combination = "Sheekh_id:" + sheekhIds[i];
+			}
+			else
+				wholeDB = false;
+		}
+
 		final DBHelper mDbHelper = new DBHelper(mainContext);
 		final SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		final Cursor mCursor1 = db.rawQuery("SELECT * FROM Category WHERE Category_parent = " + id, null);
@@ -222,6 +238,22 @@ public class FeqhListFragment extends ListFragment
 
 	private void displayFeqhParent(int id)
 	{
+		String SQL_Combination = null;
+		boolean wholeDB = true;
+
+		for (int i = 0; i < sheekhIds.length; i++)
+		{
+			if (sheekhSelected[i])
+			{
+				if (SQL_Combination != null)
+					SQL_Combination = SQL_Combination + " OR Sheekh_id:" + sheekhIds[i];
+				else
+					SQL_Combination = "Sheekh_id:" + sheekhIds[i];
+			}
+			else
+				wholeDB = false;
+		}
+
 		final DBHelper mDbHelper = new DBHelper(mainContext);
 		final SQLiteDatabase db = mDbHelper.getReadableDatabase();
 		final Cursor mCursor0 = db.rawQuery("SELECT Category_parent from Category WHERE Category_id = " + id, null);

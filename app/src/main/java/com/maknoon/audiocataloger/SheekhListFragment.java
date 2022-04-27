@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,8 @@ import androidx.appcompat.widget.AppCompatTextView;
 import androidx.fragment.app.ListFragment;
 
 import static com.maknoon.audiocataloger.MainActivity.setCurrentChapter;
+import static com.maknoon.audiocataloger.MainActivity.sheekhIds;
+import static com.maknoon.audiocataloger.MainActivity.sheekhSelected;
 import static com.maknoon.audiocataloger.MainActivity.toURL_File;
 
 public class SheekhListFragment extends ListFragment
@@ -170,9 +173,28 @@ public class SheekhListFragment extends ListFragment
 	{
 		button.setVisibility(View.INVISIBLE);
 
+		String SQL_Combination = null;
+		boolean wholeDB = true;
+
+		for (int i = 0; i < sheekhIds.length; i++)
+		{
+			if (sheekhSelected[i])
+			{
+				if (SQL_Combination != null)
+					SQL_Combination = SQL_Combination + " OR Sheekh_id=" + sheekhIds[i];
+				else
+					SQL_Combination = "Sheekh_id=" + sheekhIds[i];
+			}
+			else
+				wholeDB = false;
+		}
+
+		Log.v("SSSSSSS", "wholeDB: " + wholeDB);
+		Log.v("SSSSSSS", "SQL_Combination: " + SQL_Combination);
+
 		final DBHelper mDbHelper = new DBHelper(mainContext);
 		final SQLiteDatabase db = mDbHelper.getReadableDatabase();
-		final Cursor mCursor = db.rawQuery("SELECT * FROM Sheekh ORDER BY Sheekh_id", null);
+		final Cursor mCursor = db.rawQuery("SELECT * FROM Sheekh" + (wholeDB ? " ORDER BY Sheekh_id" : " WHERE " + SQL_Combination + " ORDER BY Sheekh_id"), null);
 		final Sheekh[] values = new Sheekh[mCursor.getCount()];
 		if (mCursor.moveToFirst())
 		{

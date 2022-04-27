@@ -1,5 +1,7 @@
 package com.maknoon.audiocataloger;
 
+import static java.lang.Thread.sleep;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -36,7 +38,6 @@ import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector;
 import com.google.android.exoplayer2.metadata.icy.IcyHeaders;
@@ -45,7 +46,7 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DataSpec;
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.FileDataSource;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
@@ -94,7 +95,7 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 		mediaSession = new MediaSessionCompat(this, TAG);
 
 		// Enable callbacks from MediaButtons and TransportControls. No need, deprecated. Enabled by default
-		mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+		//mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
 		// Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player
 		final PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder().setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_STOP);
@@ -145,7 +146,7 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 		setUpPlayer();
 	}
 
-	static SimpleExoPlayer mediaPlayer;
+	static ExoPlayer mediaPlayer;
 	PlayerNotificationManager playerNotificationManager;
 	static boolean serviceStarted = false;
 
@@ -177,9 +178,9 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 		trackSelector.setParameters(parameters);
 		*/
 
-		//mediaPlayer = new SimpleExoPlayer.Builder(this, renderersFactory).build();
-		//mediaPlayer = new SimpleExoPlayer.Builder(this, new MyRenderersFactory(this))
-		mediaPlayer = new SimpleExoPlayer.Builder(this)
+		//mediaPlayer = new ExoPlayer.Builder(this, renderersFactory).build();
+		//mediaPlayer = new ExoPlayer.Builder(this, new MyRenderersFactory(this))
+		mediaPlayer = new ExoPlayer.Builder(this)
 				//.setLoadControl(builder.createDefaultLoadControl()) // controls when a MediaSource should buffer more media and how much it should buffer
 				//.setTrackSelector(trackSelector)
 				.build();
@@ -257,8 +258,8 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 						if(ongoing) // play
 						{
 							// Avoid starting service many times. it should work without it as well since only one instance is running. However, every time you start the service, the onStartCommand() method is called.
-							// Version 12, removed due to many reported 'ANRs & crashes' in google console -> Context.startForegroundService() did not then call Service.startForeground(). No clue, TODO: recheck this after some time in the new version
-							//if(!serviceStarted)
+							// Version 12, removed due to many reported 'ANRs & crashes' in google console -> Context.startForegroundService() did not then call Service.startForeground(). No value
+							if(!serviceStarted)
 							{
 								serviceStarted = true;
 								if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -266,10 +267,21 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 									startForegroundService(new Intent(MediaService.this, MediaService.class));
 								else
 									startService(new Intent(MediaService.this, MediaService.class));
+
+								try
+								{
+									// Version 15, it seems the issue is with having startForeground immediately after startForegroundService in which the later didn't finish initialization.
+									// startForeground should be after finish service startup in onStartCommand() but cannot put it since you cannot get the notification instance. hence implement a wait of 100ms
+									sleep(100);
+								}
+								catch (InterruptedException e)
+								{
+									e.printStackTrace();
+								}
 							}
 
 							// Display the notification and place the service in the foreground
-							startForeground(notificationId, notification);
+							startForeground(notificationId, notification); // Version 15, moved to onStartCommand()
 							LocalBroadcastManager.getInstance(MediaService.this).registerReceiver(noisyReceiver, intentFilter);
 						}
 						else // pause
@@ -284,10 +296,8 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 					@Override
 					public void onNotificationCancelled(int notificationId, boolean dismissedByUser)
 					{
-						Log.v(TAG, "salam");
-
-						serviceStarted = false;
-						mediaPlayer.stop(true);
+						mediaPlayer.stop();
+						mediaPlayer.clearMediaItems();
 						runningUrl = "";
 
 						/*
@@ -308,6 +318,7 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 
 						stopForeground(true); // Take the service out of the foreground
 						stopSelf();
+						serviceStarted = false;
 
 						if(dismissedByUser)
 							Log.v(TAG, "User swipe the notification");
@@ -596,23 +607,23 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 		if (mediaPlayer != null)
 		{
 			// Produces DataSource instances through which media data is loaded
-			final DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
-					Util.getUserAgent(this, getString(R.string.app_name)));
+			final DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(this);
 
 			// This is the MediaSource representing the media to be played
 			final MediaSource videoSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
 					.createMediaSource(com.google.android.exoplayer2.MediaItem.fromUri(Uri.parse(url)));
 
-			mediaPlayer.setPlayWhenReady(true);
-
 			if (offset != 0)
 			{
 				mediaPlayer.seekTo(offset);
-				mediaPlayer.prepare(videoSource, false, true);
+				mediaPlayer.setMediaSource(videoSource, false);
 			}
 			else
 				// Prepare the player with the source
-				mediaPlayer.prepare(videoSource, true, true);
+				mediaPlayer.setMediaSource(videoSource, true);
+
+			mediaPlayer.prepare();
+			mediaPlayer.setPlayWhenReady(true);
 		}
 	}
 
@@ -690,8 +701,9 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 					.createMediaSource(Uri.parse(url));
 					*/
 
-			// Remove IcyHeaders since it streaming is stopped after 5-6 times
+			// Remove IcyHeaders since streaming is stopped after 5-6 times
 			// https://github.com/google/ExoPlayer/issues/7450
+			// TODO: retest in later versions without this. it might be solved
 			final ProgressiveMediaSource audioSource2 = new ProgressiveMediaSource.Factory(() ->
 			{
 				if (url.startsWith("http"))
@@ -713,23 +725,26 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 							return super.open(dataSpec.withRequestHeaders(m2));
 						}
 					};
+
 					//dataSource.clearRequestProperty(IcyHeaders.REQUEST_HEADER_ENABLE_METADATA_NAME);
 					return dataSource;
 				}
 				else
 					//return new DefaultDataSource(this, Util.getUserAgent(this, getString(R.string.app_name)), false);
 					return new FileDataSource();
+
 			}).createMediaSource(com.google.android.exoplayer2.MediaItem.fromUri(Uri.parse(url)));
 
 			if (offset != 0)
 			{
 				mediaPlayer.seekTo(offset);
-				mediaPlayer.prepare(audioSource2, false, true);
+				mediaPlayer.setMediaSource(audioSource2, false);
 			}
 			else
 				// Prepare the player with the source
-				mediaPlayer.prepare(audioSource2, true, true);
+				mediaPlayer.setMediaSource(audioSource2, true);
 
+			mediaPlayer.prepare();
 			runningUrl = url;
 			mediaPlayer.setPlayWhenReady(true);
 			playerNotificationManager.setPlayer(mediaPlayer);
@@ -828,8 +843,8 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 
 		// Take the service out of the foreground
 		stopForeground(true);
-
 		stopSelf();
+		serviceStarted = false;
 	}
 
 	void mp_pause()
@@ -941,13 +956,14 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 			}
 		}
 		else
-			Log.e(TAG, "Error: " + error.toString());
+			Log.e(TAG, "Error: " + error);
 
 		playerNotificationManager.setPlayer(null); // will call onNotificationCancelled()
 	}
 
 	@Override
-	public void onPlayerStateChanged(boolean playWhenReady, int playbackState)
+	public void onPlaybackStateChanged(int playbackState)
+	//public void onPlayerStateChanged(boolean playWhenReady, int playbackState)
 	{
 		/* This is useful in case you do NOT use PlayerNotificationManager. the sync (play/pause) between normal notification and PlayerControlView is missing unless you use PlayerNotificationManager
 		// also all needed updates is done now in onNotificationPosted()
@@ -1026,7 +1042,8 @@ public class MediaService extends MediaBrowserServiceCompat implements Player.Li
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
 		Log.v(TAG, "onStartCommand " + intent);
-		if(intent != null)
+
+		if(intent != null && mediaSession != null)
 			MediaButtonReceiver.handleIntent(mediaSession, intent);
 
 		//return START_STICKY; // Service will be restarted if killed by OS. In this case it will cause a crash since intent = null and our MediaService start the service when only called by play(,,) which is not done when restarted by OS

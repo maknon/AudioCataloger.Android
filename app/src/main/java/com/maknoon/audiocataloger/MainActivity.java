@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 	static int[] sheekhIds;
 	static boolean[] sheekhSelected;
 
-	static String sdPath;
+	static String sdPath, sheekh_ids;
 	SharedPreferences mPrefs;
 
 	static final int MSG_DB_INITIAT_DONE = 1;
@@ -241,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 			deleteDatabase(DBHelper.DB_NAME);
 			deleteDatabase(DBHelper.DB_ATTACH_NAME);
 
-			copyDataBase(DBHelper.DB_NAME); // TODO: delete db in the asset folder after replacing the app db with it
+			copyDataBase(DBHelper.DB_NAME); // you cannot delete db in the asset folder after installation. apk is read only
 			copyDataBase(DBHelper.DB_ATTACH_NAME); // Version 5, divide the DB so that we have Contents table in a separate DB. this allows to delete the DB after creating FTS3 and save 100mb. also it increase the speed by 50% !
 
 			final DBHelper dbHelper = new DBHelper(ctx);
@@ -296,6 +296,39 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		final ActionBar ab = getSupportActionBar();
 		if (ab != null)
 			ab.setTitle(R.string.app_name);
+
+		final DBHelper mDbHelper = new DBHelper(this);
+		final SQLiteDatabase db = mDbHelper.getReadableDatabase();
+		final Cursor mCursor = db.rawQuery("SELECT * FROM Sheekh ORDER BY Sheekh_id", null);
+
+		sheekhNames = new CharSequence[mCursor.getCount()];
+		sheekhIds = new int[mCursor.getCount()];
+		sheekhSelected = new boolean[mCursor.getCount()];
+
+		sheekh_ids = mPrefs.getString("sheekh_ids", "");
+
+		if(sheekh_ids == null)
+			sheekh_ids = "";
+
+		if (mCursor.moveToFirst())
+		{
+			for (int i = 0; i < mCursor.getCount(); i++)
+			{
+				final String sheekh_name = mCursor.getString(mCursor.getColumnIndexOrThrow("Sheekh_name"));
+				final int sheekh_id = mCursor.getInt(mCursor.getColumnIndexOrThrow("Sheekh_id"));
+				sheekhNames[i] = sheekh_name;
+				sheekhIds[i] = sheekh_id;
+
+				if (sheekh_ids.contains(" " + sheekh_id + " "))
+					sheekhSelected[i] = false;
+				else
+					sheekhSelected[i] = true;
+				mCursor.moveToNext();
+			}
+		}
+		mCursor.close();
+		db.close();
+		mDbHelper.close();
 
 		final SectionsPagerAdapter mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), getLifecycle());
 		final ViewPager2 mViewPager = findViewById(R.id.viewpager);
@@ -365,30 +398,6 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 
 		mViewPager.setCurrentItem(0, true);
 
-		final DBHelper mDbHelper = new DBHelper(this);
-		final SQLiteDatabase db = mDbHelper.getReadableDatabase();
-		final Cursor mCursor = db.rawQuery("SELECT * FROM Sheekh ORDER BY Sheekh_id", null);
-
-		sheekhNames = new CharSequence[mCursor.getCount()];
-		sheekhIds = new int[mCursor.getCount()];
-		sheekhSelected = new boolean[mCursor.getCount()];
-
-		if (mCursor.moveToFirst())
-		{
-			for (int i = 0; i < mCursor.getCount(); i++)
-			{
-				final String sheekh_name = mCursor.getString(mCursor.getColumnIndexOrThrow("Sheekh_name"));
-				final int sheekh_id = mCursor.getInt(mCursor.getColumnIndexOrThrow("Sheekh_id"));
-				sheekhNames[i] = sheekh_name;
-				sheekhIds[i] = sheekh_id;
-				sheekhSelected[i] = true;
-				mCursor.moveToNext();
-			}
-		}
-		mCursor.close();
-		db.close();
-		mDbHelper.close();
-
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
 		initMediaController();
@@ -439,9 +448,6 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		return true;
 	}
 
-	static String SQL_Combination = null;
-	static boolean wholeDB = true;
-
 	//AlertDialog directoryDialog;
 	//ListView directoryList;
 
@@ -457,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 			case R.id.search_range:
 			{
 				final AlertDialog.Builder ad = new AlertDialog.Builder(this);
-				ad.setTitle("نطاق البحث");
+				ad.setTitle(R.string.search_range);
 				ad.setMultiChoiceItems(sheekhNames, sheekhSelected, new DialogInterface.OnMultiChoiceClickListener()
 				{
 					public void onClick(DialogInterface dialog, int clicked, boolean selected)
@@ -466,7 +472,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 					}
 				});
 
-				ad.setPositiveButton("إلغاء الكل", new DialogInterface.OnClickListener()
+				ad.setPositiveButton(R.string.remove_all, new DialogInterface.OnClickListener()
 				{
 					// This will not override the behavior of this button (close after click)
 					public void onClick(DialogInterface dialog, int id)
@@ -474,7 +480,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 					}
 				});
 
-				ad.setNegativeButton("تحديد الكل", new DialogInterface.OnClickListener()
+				ad.setNegativeButton(R.string.select_all, new DialogInterface.OnClickListener()
 				{
 					// This will not override the behavior of this button (close after click)
 					public void onClick(DialogInterface dialog, int id)
@@ -482,7 +488,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 					}
 				});
 
-				ad.setNeutralButton("إغلاق", new DialogInterface.OnClickListener()
+				ad.setNeutralButton(R.string.close, new DialogInterface.OnClickListener()
 				{
 					@Override
 					public void onClick(DialogInterface dialog, int id)
@@ -490,27 +496,23 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 						//for (int i = 0; i < sheekhNames.length; i++)
 						//	Log.i("maknoon", sheekhNames[i] + " selected: " + sheekhSelected[i]);
 
-						SQL_Combination = null;
-						wholeDB = true;
-
+						sheekh_ids = "";
 						for (int i = 0; i < sheekhIds.length; i++)
-						{
-							if (sheekhSelected[i])
-							{
-								if (SQL_Combination != null)
-									SQL_Combination = SQL_Combination + " OR Sheekh_id:" + sheekhIds[i];
-								else
-									SQL_Combination = "Sheekh_id:" + sheekhIds[i];
-							}
-							else
-								wholeDB = false;
-						}
+							if (!sheekhSelected[i])
+								sheekh_ids = sheekh_ids + " " + sheekhIds[i] + " ";
+
+						mPrefs.edit().putString("sheekh_ids", sheekh_ids).apply();
 
 						dialog.cancel();
+
+						// Refresh the whole view
+						((SheekhListFragment) getSupportFragmentManager().getFragments().get(0)).displaySheekh();
+						((FeqhListFragment) getSupportFragmentManager().getFragments().get(1)).displayFeqhChild(0, ""); // Empty means root
 					}
 				});
 
 				final AlertDialog d = ad.create();
+				d.setCancelable(false);
 				d.show();
 
 				final ListView lv = d.getListView();
@@ -532,6 +534,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 						//else dialog stays open. Make sure you have an obvious way to close the dialog especially if you set cancellable to false.
 					}
 				});
+
 				d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener()
 				{
 					@Override
@@ -774,7 +777,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 	};
 	*/
 
-	private BroadcastReceiver saveFavoriteReceiver = new BroadcastReceiver()
+	private final BroadcastReceiver saveFavoriteReceiver = new BroadcastReceiver()
 	{
 		@Override
 		public void onReceive(Context c, Intent i)
@@ -784,7 +787,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		}
 	};
 
-	private BroadcastReceiver DownloadReceiver = new BroadcastReceiver()
+	private final BroadcastReceiver DownloadReceiver = new BroadcastReceiver()
 	{
 		@Override
 		public void onReceive(Context c, Intent i)

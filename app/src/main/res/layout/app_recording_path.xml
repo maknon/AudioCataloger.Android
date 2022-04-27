@@ -10,8 +10,7 @@
 
 	<RelativeLayout
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:background="#fafafa">
+		android:layout_height="wrap_content">
 
 		<androidx.appcompat.widget.AppCompatImageView
 			android:id="@+id/note_btn"
@@ -19,6 +18,7 @@
 			android:layout_height="wrap_content"
 			android:layout_alignParentTop="true"
 			android:padding="15dp"
+			app:tint="@color/colorPrimary"
 			app:srcCompat="@drawable/baseline_save_alt_24"/>
 
 		<androidx.appcompat.widget.AppCompatTextView
@@ -29,6 +29,7 @@
 			android:layout_marginStart="5dp"
 			android:layout_marginEnd="5dp"
 			android:layout_marginTop="18dp"
+			android:textColor="@color/colorPrimary"
 			android:text="@string/recording_note"
 			android:textStyle="bold">
 		</androidx.appcompat.widget.AppCompatTextView>
@@ -47,7 +48,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:layout_margin="5dp"
-			android:divider="@color/colorAccent"
+			android:divider="@color/colorPrimary"
 			android:dividerHeight="1dp"
 			android:background="@drawable/listview_border"
 			android:layout_below="@id/note_btn"/>
@@ -67,6 +68,7 @@
 			android:layout_height="wrap_content"
 			android:layout_below="@id/storageList"
 			android:layout_margin="5dp"
+			android:textColor="@color/colorPrimary"
 			android:text="@string/selected_folder"
 			android:textStyle="bold">
 		</androidx.appcompat.widget.AppCompatTextView>
@@ -78,7 +80,7 @@
 			android:layout_below="@id/txtvSelectedFolderLabel"
 			android:ellipsize="start"
 			android:scrollHorizontally="true"
-			android:textColor="@color/colorAccent"
+			android:textColor="@color/colorPrimary"
 			android:layoutDirection="ltr"
 			android:layout_margin="5dp"/>
 
@@ -91,14 +93,14 @@
 			android:layout_marginStart="30dp"
 			android:layout_marginEnd="30dp"
 			android:text="@string/open_folder"
-			android:textColor="@android:color/tab_indicator_text"
+			android:textColor="@color/colorPrimary"
 			app:backgroundTint="@android:color/transparent"
 			app:cornerRadius="15dp"
-			app:iconGravity="textStart"
 			app:icon="@drawable/outline_folder_open_24"
-			app:iconTint="@android:color/tab_indicator_text"
-			app:rippleColor="@android:color/secondary_text_dark"
-			app:strokeColor="@android:color/tab_indicator_text"
+			app:iconGravity="textStart"
+			app:iconTint="@color/colorPrimary"
+			app:rippleColor="?attr/colorControlHighlight"
+			app:strokeColor="@color/colorPrimary"
 			app:strokeWidth="1dp" />
 
 		<!--

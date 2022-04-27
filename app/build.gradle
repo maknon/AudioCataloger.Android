@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 // Load keystore.properties
-def keystorePropertiesFile = rootProject.file("app/keystore.properties");
+def keystorePropertiesFile = rootProject.file("app/keystore.properties")
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
@@ -20,8 +20,8 @@ android {
 		applicationId "com.maknoon.audiocataloger"
 		minSdkVersion 19
 		targetSdkVersion 32
-		versionCode 26
-		versionName "14"
+		versionCode 29
+		versionName "15"
 		//multiDexEnabled true
 		signingConfig signingConfigs.release
 		vectorDrawables.useSupportLibrary = true
@@ -52,16 +52,16 @@ repositories {
 
 dependencies {
 	implementation 'com.google.firebase:firebase-dynamic-links:21.0.1'
-	implementation 'com.google.firebase:firebase-analytics:20.1.1'
+	implementation 'com.google.firebase:firebase-analytics:20.1.2'
 	//implementation 'com.google.firebase:firebase-messaging:20.1.7' // To hide some messages in older OS (4.4) -> Unable to start service Intent { act=com.google.firebase.MESSAGING_EVENT ...
-	implementation 'com.google.android.material:material:1.6.0-alpha03'
+	implementation 'com.google.android.material:material:1.7.0-alpha01'
 	implementation 'com.google.android.exoplayer:exoplayer-core:2.17.1'
 	implementation 'com.google.android.exoplayer:exoplayer-ui:2.17.1'
 	//implementation 'com.google.android.exoplayer:extension-okhttp:2.13.3'
 	implementation 'com.google.android.exoplayer:extension-mediasession:2.17.1'
 	//implementation 'com.google.android.exoplayer:extension-cronet:2.13.3'
 	implementation 'androidx.appcompat:appcompat:1.4.1'
-	implementation 'androidx.media:media:1.5.0'
+	implementation 'androidx.media:media:1.6.0'
 	//implementation 'androidx.multidex:multidex:2.0.1'
 	implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
 	implementation 'androidx.legacy:legacy-support-v4:1.0.0' // Required for older OS (4.4) since MediaControllerCompat is not working -> Could not find class 'android.media.session.MediaController', referenced from method android.support.v4.media.session.MediaControllerCompat.setMediaController
@@ -69,4 +69,4 @@ dependencies {
 }
 
 apply plugin: 'com.google.gms.google-services'
-//googleServices.disableVersionCheck = true // Do it for testing in Emulator v5.0 / v4.2
+//googleServices.disableVersionCheck = true // Do it for testing in Emulator v5.0 / v4.4

@@ -23,8 +23,11 @@
     <string name="open_folder">فتح المجلد</string>
     <string name="support">الشرح والدعم</string>
     <string name="audios_path">مسار الصوتيات</string>
-    <string name="search_range">نطاق البحث</string>
+    <string name="search_range">نطاق البحث والعرض</string>
     <string name="player">مشغل الصوتيات</string>
+    <string name="remove_all">إلغاء الكل</string>
+    <string name="select_all">تحديد الكل</string>
+    <string name="close">إغلاق</string>
 
     <string name="default_notification_channel_id">audiocataloger_channel_id</string>
     <string name="default_notification_channel_name">مشغل الصوتيات</string>

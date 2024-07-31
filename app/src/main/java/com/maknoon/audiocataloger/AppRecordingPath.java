@@ -23,25 +23,26 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.AppCompatTextView;
 
-import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 // https://rogerkeays.com/simple-android-file-chooser
 public class AppRecordingPath extends AppCompatActivity
 {
+	static final int ACTIVITY_RECORDING_PATH = 217;
+
 	final String TAG = "AppRecordingPath";
 
-	private static final String PARENT_DIR = "..";
+	static final String PARENT_DIR = "..";
 
 	ArrayAdapter<String> directoryList;
 	ArrayAdapter<File> storageList;
 	File currentPath;
 	AppCompatTextView selectedFolder;
-	String sdPath;
+	String recordPath;
 
 	@Override
 	protected void attachBaseContext(Context base)
@@ -63,37 +64,11 @@ public class AppRecordingPath extends AppCompatActivity
 		if (savedInstanceState == null)
 		{
 			final Intent intent = getIntent();
-			sdPath = intent.getStringExtra("sdPath");
+			recordPath = intent.getStringExtra("sdPath");
 		}
 
 		directoryList = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
 		storageList = new ArrayAdapter<>(this, R.layout.app_recording_path_list, R.id.Itemname);
-
-		final MaterialButton openFolder = findViewById(R.id.openFolder);
-
-		// Check that there is an app activity handling folder browser intent on our system. By default there is none unless the user has some file manager app installed
-		final Intent intent = new Intent(Intent.ACTION_VIEW);
-		intent.setDataAndType(Uri.parse(sdPath), "resource/folder");
-		if (intent.resolveActivityInfo(getPackageManager(), 0) != null)
-		{
-			openFolder.setOnClickListener(new View.OnClickListener()
-			{
-				@Override
-				public void onClick(View arg0)
-				{
-					final Intent intent = new Intent(Intent.ACTION_VIEW);
-					intent.setDataAndType(Uri.parse(currentPath.getPath()), "resource/folder");
-
-					// Check that there is an app activity handling that intent on our system
-					//if (intent.resolveActivityInfo(getPackageManager(), 0) != null)
-					startActivity(intent);
-					//else
-					//	Toast.makeText(getApplicationContext(), "Did not find any activity capable of handling that intent on our system", Toast.LENGTH_LONG).show();
-				}
-			});
-		}
-		else
-			openFolder.setVisibility(View.GONE);
 
 		final ListView directoryView = findViewById(R.id.directoryList);
 		directoryView.setAdapter(directoryList);
@@ -103,9 +78,9 @@ public class AppRecordingPath extends AppCompatActivity
 			public void onItemClick(AdapterView<?> parent, View view, int position, long rowId)
 			{
 				final String fileChosen = directoryList.getItem(position);
-				if(fileChosen != null)
+				if (fileChosen != null)
 				{
-					if(fileChosen.equals(PARENT_DIR))
+					if (fileChosen.equals(PARENT_DIR))
 					{
 						final File chosenFile = currentPath.getParentFile();
 						if (chosenFile != null && chosenFile.isDirectory())
@@ -134,7 +109,7 @@ public class AppRecordingPath extends AppCompatActivity
 			}
 		});
 
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
 		{
 			for (File f : getExternalFilesDirs(null))
 			{
@@ -154,15 +129,15 @@ public class AppRecordingPath extends AppCompatActivity
 		else
 		{
 			final File f = getFilesDir();
-			if(f != null)
+			if (f != null)
 				storageList.add(f);
 		}
 
-		selectedFolder = findViewById(R.id.txtvSelectedFolder);
-		refresh(new File(sdPath));
+		selectedFolder = findViewById(R.id.selectedFolder);
+		refresh(new File(recordPath));
 	}
 
-	// Sort, filter and display the files for the given path.
+	// Sort, filter and display the files for the given path
 	private void refresh(final File path)
 	{
 		this.currentPath = path;
@@ -209,84 +184,121 @@ public class AppRecordingPath extends AppCompatActivity
 	@Override
 	public boolean onOptionsItemSelected(@NonNull MenuItem item)
 	{
-		switch (item.getItemId())
+		if (item.getItemId() == android.R.id.home)
 		{
-			case android.R.id.home:
-				finish();
-				return true;
+			finish();
+			return true;
+		}
 
-			case R.id.save:
-				try
+		if (item.getItemId() == R.id.openFolder)
+		{
+			final Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+
+			// Optionally, specify a URI for the directory that should be opened in the system file picker when it loads. is not working
+			//intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(currentPath.getPath())); // recordPath
+
+			startActivityForResult(intent, ACTIVITY_RECORDING_PATH);
+		}
+
+		if (item.getItemId() == R.id.save)
+		{
+			try
+			{
+				final File f = new File(currentPath.toString() + "/test.a"); // This is very important even when using SAF. since you can browse using the '..' and go to other places using our list and not SAF. surprisingly you can store on paths that SAF will not allow you to select !
+				if (f.createNewFile())
 				{
-					final File f = new File(currentPath.toString() + "/test.a");
+					recordPath = currentPath + "/";
 
-					if (f.createNewFile())
+					final Intent data = new Intent();
+					data.putExtra("sdPath", recordPath);
+					setResult(RESULT_OK, data);
+					finish();
+
+					Log.i(TAG, "Audio Folder is OK, removing the temp file: " + f.delete());
+				}
+				else
+					Toast.makeText(this, R.string.recording_folder_error, Toast.LENGTH_LONG).show();
+			}
+			catch (IOException e)
+			{
+				Toast.makeText(this, R.string.recording_folder_error, Toast.LENGTH_LONG).show();
+				Log.e(TAG, Log.getStackTraceString(e));
+			}
+
+			return true;
+		}
+
+		if (item.getItemId() == R.id.create_folder)
+		{
+			final AppCompatEditText input = new AppCompatEditText(this);
+			input.setInputType(InputType.TYPE_CLASS_TEXT);
+
+			final MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
+			builder.setTitle(R.string.create_folder);
+			builder.setView(input);
+			builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener()
+			{
+				@Override
+				public void onClick(DialogInterface dialog, int which)
+				{
+					dialog.dismiss();
+					final String m_Text = input.getText().toString();
+					if (!m_Text.isEmpty())
 					{
-						sdPath = currentPath + "/";
-
-						final Intent data = new Intent();
-						data.putExtra("sdPath", sdPath);
-						setResult(RESULT_OK, data);
-						finish();
-
-						Toast.makeText(this, R.string.recordingNotification, Toast.LENGTH_LONG).show();
-						Log.i(TAG, "Audio Folder is OK, removing the temp file: " + f.delete());
+						final File newDir = new File(currentPath.toString() + File.separator + m_Text);
+						if (newDir.exists())
+							Toast.makeText(AppRecordingPath.this, R.string.create_folder_error_already_exists, Toast.LENGTH_SHORT).show();
+						else
+						{
+							if (newDir.mkdir())
+							{
+								Toast.makeText(AppRecordingPath.this, R.string.create_folder_success, Toast.LENGTH_SHORT).show();
+								refresh(currentPath);
+							}
+							else
+								Toast.makeText(AppRecordingPath.this, R.string.create_folder_error, Toast.LENGTH_SHORT).show();
+						}
 					}
 					else
-						Toast.makeText(this, R.string.recording_folder_error, Toast.LENGTH_LONG).show();
+						Toast.makeText(AppRecordingPath.this, R.string.create_folder_empty, Toast.LENGTH_SHORT).show();
 				}
-				catch (IOException e)
+			});
+			builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener()
+			{
+				@Override
+				public void onClick(DialogInterface dialog, int which)
 				{
-					Toast.makeText(this, R.string.recording_folder_error, Toast.LENGTH_LONG).show();
-					Log.e(TAG, Log.getStackTraceString(e));
+					dialog.dismiss();
 				}
+			});
 
-				return true;
-			case R.id.create_folder:
-
-				final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-				builder.setTitle(R.string.create_folder);
-
-				final AppCompatEditText input = new AppCompatEditText(this);
-				input.setInputType(InputType.TYPE_CLASS_TEXT);
-
-				builder.setView(input);
-				builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which)
-					{
-						dialog.dismiss();
-						final String m_Text = input.getText().toString();
-						if (!m_Text.isEmpty())
-						{
-							final File newDir = new File(currentPath.toString() + File.separator + m_Text);
-							if (newDir.exists())
-								Toast.makeText(AppRecordingPath.this, R.string.create_folder_error_already_exists, Toast.LENGTH_SHORT).show();
-							else
-							{
-								if (newDir.mkdir())
-								{
-									Toast.makeText(AppRecordingPath.this, R.string.create_folder_success, Toast.LENGTH_SHORT).show();
-									refresh(currentPath);
-								}
-								else
-									Toast.makeText(AppRecordingPath.this, R.string.create_folder_error, Toast.LENGTH_SHORT).show();
-							}
-						}
-						else
-							Toast.makeText(AppRecordingPath.this, R.string.create_folder_empty, Toast.LENGTH_SHORT).show();
-					}
-				});
-				builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						dialog.dismiss();
-					}
-				});
-
-				builder.show();
-				return true;
+			builder.show();
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		super.onActivityResult(requestCode, resultCode, data);
+		if (resultCode == RESULT_OK)
+		{
+			if (requestCode == ACTIVITY_RECORDING_PATH)
+			{
+				if (data != null)
+				{
+					final Uri uri = data.getData();
+					if (uri != null)
+					{
+						final String newPath = UriUtil.getFullPathFromTreeUri(uri, this);
+						if (newPath != null) // if UriUtil failed to convert the Uri to a hard-codec path, keep old path as is
+							refresh(new File(newPath));
+						else
+							Toast.makeText(this, R.string.uri_error, Toast.LENGTH_SHORT).show();
+					}
+				}
+			}
+		}
 	}
 }

@@ -23,8 +23,8 @@ import android.os.Handler;
 import android.os.Message;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Lifecycle;
@@ -35,19 +35,22 @@ import androidx.fragment.app.FragmentManager;
 import android.os.Bundle;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.Player;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.session.MediaController;
+import androidx.media3.session.SessionToken;
+import androidx.media3.ui.PlayerControlView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.exoplayer2.ui.PlayerControlView;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import androidx.appcompat.app.AppCompatDelegate;
 
-import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -57,6 +60,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
 import com.google.firebase.dynamiclinks.ShortDynamicLink;
 
@@ -69,6 +73,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+@OptIn(markerClass = UnstableApi.class)
 public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		SheekhListFragment.setOnPlayListener, SearchListFragment.setOnPlayListener,
 		FeqhListFragment.setOnPlayListener, FavoriteListFragment.setOnPlayListener
@@ -87,6 +92,9 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 	ProgressDialog dbInitiateDialog;
 
 	Handler handler;
+
+	PlayerControlView exoPlayerView;
+	View bookmarkButton;
 
 	// This flag should be set to true to enable VectorDrawable support for API < 21
 	static
@@ -125,19 +133,42 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		}
 	}
 
+	String runningUrl = "";
+
 	@Override
 	public void play(final int offset, final int duration, final String url, final String title, final String subTitle)
 	{
-		final MediaControllerCompat mediaControllerCompat = MediaControllerCompat.getMediaController(this);
-		if (mediaControllerCompat != null)
+		bookmarkButton.setEnabled(true);
+		bookmarkButton.setAlpha(1f);
+
+		if (mediaController != null)
 		{
-			final Bundle bundle = new Bundle();
-			bundle.putString("url", url);
-			bundle.putInt("offset", offset);
-			bundle.putInt("duration", duration);
-			bundle.putString("title", title);
-			bundle.putString("subTitle", subTitle);
-			mediaControllerCompat.sendCommand("play", bundle, null);
+			 // TODO duration should be used to stop the playing after period = duration
+			final MediaMetadata metadata = new MediaMetadata.Builder()
+					.setAlbumTitle(title) // ("\u200e" + title) we put LTR mark since subTitle cannot be changed to RTL using Mark '\u200f', not working
+					.setTitle(subTitle)
+					.build();
+			final MediaItem media = new MediaItem.Builder().setMediaId(url).setMediaMetadata(metadata).build();
+
+			if (runningUrl.equals(url) && mediaController.getPlaybackState() == Player.STATE_READY)
+				mediaController.seekTo(0, offset);
+			else
+			{
+				if (offset != 0)
+				{
+					mediaController.setMediaItem(media, false);
+					mediaController.seekTo(0, offset);
+				}
+				else
+					// Prepare the player with the source
+					mediaController.setMediaItem(media, true);
+
+				//mediaController.addMediaItem(media); // This is to enable the bookmark for the playerView only (but disabled for the notification by overriding isCommandAvailable() in MediaService). This media item is dummy. we will override the action for next button
+
+				mediaController.prepare();
+				runningUrl = url;
+			}
+			mediaController.setPlayWhenReady(true);
 		}
 	}
 
@@ -157,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 			sdPath_tmp = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS); // replace DIRECTORY_MUSIC with DIRECTORY_DOWNLOADS since it is the first one causing crashing in some devices
 		else
 		{
-			if (Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED))
+			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
 				sdPath_tmp = getExternalFilesDir(null); // return null for the first App startup in api 30, maybe a bug. ask user to restart App
 			else
 				sdPath_tmp = getFilesDir();
@@ -171,7 +202,11 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 
 		// Register here to be running all the time while the app is running, to avoid unregister it if app is swapped by other application. DownloadManager will continue in all cases and the receive broadcast will be lost and the file will not be renamed from *.m4a.part -> *.m4a
 		//LocalBroadcastManager.getInstance(this).registerReceiver(); will not work
-		registerReceiver(DownloadReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+			registerReceiver(DownloadReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_NOT_EXPORTED);
+		else
+			registerReceiver(DownloadReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+
 		LocalBroadcastManager.getInstance(this).registerReceiver(saveFavoriteReceiver, new IntentFilter(MediaService.Broadcast_saveFavorite));
 
 		// Version 7, to stop playing if call arrives. Update: remove READ_PHONE_STATE and replace it it with LISTEN_CALL_STATE which does not need permissions
@@ -219,9 +254,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 				dbThread.start();
 			}
 			else
-			{
 				setUI();
-			}
 		}
 	}
 
@@ -260,8 +293,8 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 
 			db.execSQL(String.format("ATTACH DATABASE '%s' AS db", getDatabasePath(DBHelper.DB_ATTACH_NAME).getAbsolutePath()));
 
-			//db.execSQL("CREATE VIRTUAL TABLE Contents_FTS USING fts4(matchinfo=fts3, Code INTEGER, Seq INTEGER, Sheekh_id INTEGER, Book_id INTEGER, Offset TEXT, Duration TEXT, Category_id TEXT, Line TEXT, Tafreeg TEXT)"); // Android 4.2 is not supporting FTS4 notindexed only 5.0 is supporting this. TODO: Please add once we start using 5.0 ..... notindexed=Seq, notindexed=Book_id, notindexed=Offset, notindexed=Duration, notindexed=Tafreeg
-			db.execSQL("CREATE VIRTUAL TABLE Contents_FTS USING fts4 (Code, Seq, Sheekh_id, Book_id, \"Offset\", Duration, Category_id, Line, Tafreeg)"); // Android 4.2 is not supporting FTS4 notindexed only 5.0 is supporting this. TODO: Please add once we start using 5.0 ..... notindexed=Seq, notindexed=Book_id, notindexed=Offset, notindexed=Duration, notindexed=Tafreeg
+			//db.execSQL("CREATE VIRTUAL TABLE Contents_FTS USING fts4(matchinfo=fts3, Code INTEGER, Seq INTEGER, Sheekh_id INTEGER, Book_id INTEGER, Offset TEXT, Duration TEXT, Category_id TEXT, Line TEXT, Tafreeg TEXT)");
+			db.execSQL("CREATE VIRTUAL TABLE Contents_FTS USING fts4 (Code, Seq, Sheekh_id, Book_id, \"Offset\", Duration, Category_id, Line, Tafreeg, notindexed=Seq, notindexed=Book_id, notindexed=\"Offset\", notindexed=Duration, notindexed=Tafreeg)"); // Android 4.2 is not supporting FTS4 notindexed only 5.0 is supporting this
 
 			//db.beginTransaction(); // Did not improve the performance
 			db.execSQL("INSERT INTO Contents_FTS SELECT * FROM db.Contents");
@@ -293,6 +326,26 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 	{
 		setContentView(R.layout.activity_main);
 
+		exoPlayerView = findViewById(R.id.playerView);
+
+		/*
+		PlayerControlView cannot be customised to add the bookmark button. We can replace the action for next button
+		to act as the saveFavorite/bookmark button, but it enable and disable the button based on the playlist, hence it is not suitable.
+		Replaced with normal button in the layout. We are adding a dummy MediaItem to enable the next button and override its action
+		*/
+		exoPlayerView.findViewById(R.id.exo_next).setVisibility(View.GONE);
+		bookmarkButton = exoPlayerView.findViewById(R.id.exo_bookmark);
+		bookmarkButton.setEnabled(false);
+		bookmarkButton.setAlpha(33f / 100); // https://github.com/androidx/media/blob/main/libraries/ui/src/main/res/values/constants.xml
+		bookmarkButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View view)
+			{
+				saveFavorite();
+			}
+		});
+
 		final ActionBar ab = getSupportActionBar();
 		if (ab != null)
 			ab.setTitle(R.string.app_name);
@@ -306,9 +359,6 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		sheekhSelected = new boolean[mCursor.getCount()];
 
 		sheekh_ids = mPrefs.getString("sheekh_ids", "");
-
-		if(sheekh_ids == null)
-			sheekh_ids = "";
 
 		if (mCursor.moveToFirst())
 		{
@@ -384,23 +434,18 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 			{
 				if (position == 0)
 					tab.setText(R.string.title_section1);
-				else
-					if (position == 1)
-						tab.setText(R.string.title_section2);
-					else
-						if (position == 2)
-							tab.setIcon(R.drawable.sharp_search_24);
-						else
-							if (position == 3)
-								tab.setIcon(R.drawable.outline_bookmark_border_24);
+				else if (position == 1)
+					tab.setText(R.string.title_section2);
+				else if (position == 2)
+					tab.setIcon(R.drawable.sharp_search_24);
+				else if (position == 3)
+					tab.setIcon(R.drawable.outline_bookmark_border_24);
 			}
 		}).attach();
 
 		mViewPager.setCurrentItem(0, true);
 
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-
-		initMediaController();
 	}
 
 	/**
@@ -441,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu)
+	public boolean onCreateOptionsMenu(@NonNull Menu menu)
 	{
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -462,7 +507,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		{
 			case R.id.search_range:
 			{
-				final AlertDialog.Builder ad = new AlertDialog.Builder(this);
+				final MaterialAlertDialogBuilder ad = new MaterialAlertDialogBuilder(this);
 				ad.setTitle(R.string.search_range);
 				ad.setMultiChoiceItems(sheekhNames, sheekhSelected, new DialogInterface.OnMultiChoiceClickListener()
 				{
@@ -581,7 +626,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 				}
 
 				/* Another solution but not look nice
-				final AlertDialog.Builder ad = new AlertDialog.Builder(context);
+				final MaterialAlertDialogBuilder ad = new MaterialAlertDialogBuilder(context);
 				ad.setTitle(sdPath);
 
 				final String[] fileList = refreshDirectoryList(new File(sdPath));
@@ -722,28 +767,77 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 	}
 	*/
 
+	MediaController mediaController;
+
 	@Override
 	protected void onStart()
 	{
 		super.onStart();
 		Log.v(TAG, "onStart");
 
-		if (mediaBrowserCompat == null)
-			Log.e(TAG, "mediaBrowserCompat is null !!");
-		else
+		final SessionToken sessionToken = new SessionToken(this, new ComponentName(this, MediaService.class));
+
+		if(mediaController == null)
 		{
-			// try-catch is used to avoid the strange error while resuming the app and starting at the same time
-			// java.lang.IllegalStateException: connect() called while neither disconnecting nor disconnected (state=CONNECT_STATE_CONNECTING)
-			// https://github.com/android/uamp/issues/251
-			try
+			final MediaController.Builder builder = new MediaController.Builder(this, sessionToken)
+					.setListener(new MediaController.Listener()
+					{
+						@Override
+						public void onDisconnected(@NonNull MediaController controller)
+						{
+							MediaController.Listener.super.onDisconnected(controller);
+							Log.v(TAG, "onDisconnected");
+						}
+					});
+
+			final ListenableFuture<MediaController> future = builder.buildAsync();
+			future.addListener(() ->
 			{
-				if (!mediaBrowserCompat.isConnected())
-					mediaBrowserCompat.connect();
-			}
-			catch (IllegalStateException e)
-			{
-				e.printStackTrace();
-			}
+				try
+				{
+					mediaController = future.get();
+					mediaController.addListener(new Player.Listener()
+					{
+						@Override
+						public void onPlaybackStateChanged(int playbackState)
+						{
+							Player.Listener.super.onPlaybackStateChanged(playbackState);
+							switch (playbackState)
+							{
+								case Player.STATE_READY:
+									if (exoPlayerView != null)
+										exoPlayerView.show();
+									break;
+								case Player.STATE_BUFFERING:
+									break;
+								case Player.STATE_ENDED:
+									break;
+								case Player.STATE_IDLE:
+									break;
+							}
+						}
+					});
+
+					if (exoPlayerView != null) // Needed for the first time when setUI is not called as part of onCreate()
+						exoPlayerView.setPlayer(mediaController);
+
+					final int pbState = mediaController.getPlaybackState();
+					if (mediaController.isConnected() && (mediaController.getPlayWhenReady() || pbState == Player.STATE_READY))
+					{
+						bookmarkButton.setEnabled(true);
+						bookmarkButton.setAlpha(1f);
+					}
+
+					Log.v(TAG, "The session accepted the connection");
+				}
+				catch (ExecutionException | InterruptedException e)
+				{
+					if (e.getCause() instanceof SecurityException)
+					{
+						Log.e(TAG, "The session rejected the connection", e);
+					}
+				}
+			}, ContextCompat.getMainExecutor(this));
 		}
 	}
 
@@ -829,120 +923,6 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 			}
 		}
 	};
-
-	private MediaBrowserCompat mediaBrowserCompat;
-	private final MediaBrowserCompat.ConnectionCallback mediaBrowserCompatConnectionCallback = new MediaBrowserCompat.ConnectionCallback()
-	{
-		@Override
-		public void onConnected()
-		{
-			super.onConnected();
-
-			final MediaControllerCompat mediaControllerCompat = new MediaControllerCompat(MainActivity.this, mediaBrowserCompat.getSessionToken());
-
-			// Register a Callback to stay in sync
-			mediaControllerCompat.registerCallback(mediaControllerCompatCallback);
-
-			mediaControllerCompatCallback.onMetadataChanged(mediaControllerCompat.getMetadata());
-			mediaControllerCompatCallback.onPlaybackStateChanged(mediaControllerCompat.getPlaybackState());
-
-			MediaControllerCompat.setMediaController(MainActivity.this, mediaControllerCompat);
-
-			// Finish building the UI
-			buildTransportControls();
-		}
-
-		@Override
-		public void onConnectionSuspended()
-		{
-			// The Service has crashed. Disable transport controls until it automatically reconnects
-		}
-
-		@Override
-		public void onConnectionFailed()
-		{
-			// The Service has refused our connection
-		}
-	};
-
-	PlayerControlView exoPlayerView;
-	void buildTransportControls()
-	{
-		if(MediaService.mediaPlayer != null)
-		{
-			exoPlayerView = findViewById(R.id.playerView);
-			exoPlayerView.setPlayer(MediaService.mediaPlayer);
-		}
-
-		final AppCompatImageButton saveFavorite = findViewById(R.id.saveFavorite);
-
-		// Attach a listener to the button
-		saveFavorite.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				saveFavorite();
-			}
-		});
-	}
-
-	private final MediaControllerCompat.Callback mediaControllerCompatCallback = new MediaControllerCompat.Callback()
-	{
-		@Override
-		public void onPlaybackStateChanged(PlaybackStateCompat state)
-		{
-			super.onPlaybackStateChanged(state);
-
-			if (state == null)
-				return;
-
-			switch (state.getState())
-			{
-				case PlaybackStateCompat.STATE_PLAYING:
-					if(exoPlayerView != null)
-						exoPlayerView.show();
-					break;
-				case PlaybackStateCompat.STATE_PAUSED:
-					break;
-				case PlaybackStateCompat.STATE_BUFFERING:
-					break;
-				case PlaybackStateCompat.STATE_CONNECTING:
-					break;
-				case PlaybackStateCompat.STATE_ERROR:
-					break;
-				case PlaybackStateCompat.STATE_FAST_FORWARDING:
-					break;
-				case PlaybackStateCompat.STATE_NONE:
-					break;
-				case PlaybackStateCompat.STATE_REWINDING:
-					break;
-				case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
-					break;
-				case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS:
-					break;
-				case PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM:
-					break;
-				case PlaybackStateCompat.STATE_STOPPED:
-					break;
-			}
-		}
-
-		@Override
-		public void onMetadataChanged(MediaMetadataCompat metadata)
-		{
-		}
-	};
-
-	private void initMediaController()
-	{
-		if(mediaBrowserCompat == null)
-		{
-			mediaBrowserCompat = new MediaBrowserCompat(this,
-					new ComponentName(this, MediaService.class),
-					mediaBrowserCompatConnectionCallback, getIntent().getExtras());
-		}
-	}
 
 	// Version 7
 	@Override
@@ -1045,93 +1025,89 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 	protected void onStop()
 	{
 		Log.v(TAG, "onStop");
-		//pause(); // Version 7.2, removed it again after introducing it in v7.0
 		super.onStop();
 
-		if (mediaBrowserCompat != null && mediaBrowserCompat.isConnected())
-			mediaBrowserCompat.disconnect();
-
-		/* This is onDestroy()
-		if (mediaControllerCompat != null)
+		if (mediaController != null)
 		{
-			//if (MediaControllerCompat.getMediaController(this).getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING)
-			if (mediaControllerCompat.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING)
-				mediaControllerCompat.getTransportControls().stop();
-
-			mediaControllerCompat.unregisterCallback(mediaControllerCompatCallback);
-			mediaControllerCompat = null;
+			if(mediaController.isConnected())
+				mediaController.release();
+			mediaController = null;
 		}
-		*/
 
-		if (MediaControllerCompat.getMediaController(this) != null)
-			MediaControllerCompat.getMediaController(this).unregisterCallback(mediaControllerCompatCallback);
+		//MediaController.releaseFuture(future); // no need
+
+		if(exoPlayerView != null)
+			exoPlayerView.setPlayer(null);
 	}
 
-	protected void saveFavorite()
+	void saveFavorite()
 	{
 		Log.v(TAG, "saveFavorite");
 
-		final int pbState = MediaControllerCompat.getMediaController(MainActivity.this).getPlaybackState().getState();
-		if (mediaBrowserCompat != null && mediaBrowserCompat.isConnected() && MediaService.mediaPlayer != null && (pbState == PlaybackStateCompat.STATE_PLAYING || pbState == PlaybackStateCompat.STATE_PAUSED))
+		if (mediaController != null)
 		{
-			/* Not working, http://stackoverflow.com/questions/32157862/set-add-in-android-sharedpreferences-is-not-working-as-expected
-			final SharedPreferences favoriteList = context.getSharedPreferences("favoriteList", MODE_PRIVATE);
-			final SharedPreferences currentChapter = context.getSharedPreferences("currentChapter", MODE_PRIVATE);
+			final int pbState = mediaController.getPlaybackState();
+			if (mediaController.isConnected() && (mediaController.getPlayWhenReady() || pbState == Player.STATE_READY))
+			{
+				/* Not working, http://stackoverflow.com/questions/32157862/set-add-in-android-sharedpreferences-is-not-working-as-expected
+				final SharedPreferences favoriteList = context.getSharedPreferences("favoriteList", MODE_PRIVATE);
+				final SharedPreferences currentChapter = context.getSharedPreferences("currentChapter", MODE_PRIVATE);
 
-			// we must not modify the set instance returned by getStringSet(), hence we need to create a new instance. Check API
-			final Set<String> reference = new HashSet<>(favoriteList.getStringSet("reference", new HashSet<String>()));
-			final Set<String> path = new HashSet<>(favoriteList.getStringSet("path", new HashSet<String>()));
-			final Set<String> fileName = new HashSet<>(favoriteList.getStringSet("fileName", new HashSet<String>()));
-			final Set<String> offset = new HashSet<>(favoriteList.getStringSet("offset", new HashSet<String>()));
+				// we must not modify the set instance returned by getStringSet(), hence we need to create a new instance. Check API
+				final Set<String> reference = new HashSet<>(favoriteList.getStringSet("reference", new HashSet<String>()));
+				final Set<String> path = new HashSet<>(favoriteList.getStringSet("path", new HashSet<String>()));
+				final Set<String> fileName = new HashSet<>(favoriteList.getStringSet("fileName", new HashSet<String>()));
+				final Set<String> offset = new HashSet<>(favoriteList.getStringSet("offset", new HashSet<String>()));
 
-			Log.v("maknoon:Main", "saveFavorite ref: " + reference.size());
+				Log.v("maknoon:Main", "saveFavorite ref: " + reference.size());
 
-			/*
-			final Set<String> r = favoriteList.getStringSet("reference", new HashSet<String>());
-			final Set<String> p = favoriteList.getStringSet("path", new HashSet<String>());
-			final Set<String> f = favoriteList.getStringSet("fileName", new HashSet<String>());
-			final Set<String> o = favoriteList.getStringSet("offset", new HashSet<String>());
+				/*
+				final Set<String> r = favoriteList.getStringSet("reference", new HashSet<String>());
+				final Set<String> p = favoriteList.getStringSet("path", new HashSet<String>());
+				final Set<String> f = favoriteList.getStringSet("fileName", new HashSet<String>());
+				final Set<String> o = favoriteList.getStringSet("offset", new HashSet<String>());
 
-			// we must not modify the set instance returned by getStringSet(), hence we need to create a new instance. Check API
-			final Set reference = ((Set)((HashSet) r).clone());
-			final Set path = ((Set)((HashSet) p).clone());
-			final Set fileName = ((Set)((HashSet) f).clone());
-			final Set offset = ((Set)((HashSet) o).clone());
-			*/
+				// we must not modify the set instance returned by getStringSet(), hence we need to create a new instance. Check API
+				final Set reference = ((Set)((HashSet) r).clone());
+				final Set path = ((Set)((HashSet) p).clone());
+				final Set fileName = ((Set)((HashSet) f).clone());
+				final Set offset = ((Set)((HashSet) o).clone());
+				*/
 
-			/*
-			Log.v("maknoon:Main", "saveFavorite: " + currentChapter.getString("reference", null) + ":::"+currentChapter.getString("fileName", null)+":::"+currentChapter.getString("path", null));
+				/*
+				Log.v("maknoon:Main", "saveFavorite: " + currentChapter.getString("reference", null) + ":::"+currentChapter.getString("fileName", null)+":::"+currentChapter.getString("path", null));
 
-			reference.add(currentChapter.getString("reference", null));
-			path.add(currentChapter.getString("path", null));
-			fileName.add(currentChapter.getString("fileName", null));
-			offset.add(String.valueOf(playerSrv.getPosn()));
+				reference.add(currentChapter.getString("reference", null));
+				path.add(currentChapter.getString("path", null));
+				fileName.add(currentChapter.getString("fileName", null));
+				offset.add(String.valueOf(playerSrv.getPosn()));
 
-			final SharedPreferences.Editor editor = favoriteList.edit();
-			editor.clear();
-			editor.putStringSet("reference", reference);
-			editor.putStringSet("path", path);
-			editor.putStringSet("fileName", fileName);
-			editor.putStringSet("offset", offset);
-			editor.apply();
+				final SharedPreferences.Editor editor = favoriteList.edit();
+				editor.clear();
+				editor.putStringSet("reference", reference);
+				editor.putStringSet("path", path);
+				editor.putStringSet("fileName", fileName);
+				editor.putStringSet("offset", offset);
+				editor.apply();
 
-			Log.v("maknoon:Main", "saveFavorite: " + reference.size());
-			*/
+				Log.v("maknoon:Main", "saveFavorite: " + reference.size());
+				*/
 
-			final SharedPreferences currentChapter = getSharedPreferences("currentChapter", MODE_PRIVATE);
-			final ContentValues values = new ContentValues();
+				final SharedPreferences currentChapter = getSharedPreferences("currentChapter", MODE_PRIVATE);
+				final ContentValues values = new ContentValues();
 
-			values.put("Reference", currentChapter.getString("reference", null));
-			values.put("path", currentChapter.getString("path", null));
-			values.put("FileName", currentChapter.getString("fileName", null));
-			values.put("Offset", MediaService.mediaPlayer.getCurrentPosition());
+				values.put("Reference", currentChapter.getString("reference", null));
+				values.put("path", currentChapter.getString("path", null));
+				values.put("FileName", currentChapter.getString("fileName", null));
+				values.put("Offset", mediaController.getCurrentPosition());
 
-			final DBHelper mDbHelper = new DBHelper(this);
-			final SQLiteDatabase db = mDbHelper.getWritableDatabase();
-			db.insert("Favorite", null, values);
-			db.close();
+				final DBHelper mDbHelper = new DBHelper(this);
+				final SQLiteDatabase db = mDbHelper.getWritableDatabase();
+				db.insert("Favorite", null, values);
+				db.close();
 
-			((FavoriteListFragment) getSupportFragmentManager().getFragments().get(3)).displayFavoriteList();
+				((FavoriteListFragment) getSupportFragmentManager().getFragments().get(3)).displayFavoriteList();
+			}
 		}
 	}
 
@@ -1144,7 +1120,6 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		editor.putString("fileName", fileName);
 		editor.apply();
 	}
-
 
 	public static String toURL(String path, String fileName, boolean shortUrl)
 	{
@@ -1169,7 +1144,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		*/
 
 		final Uri.Builder builder = new Uri.Builder();
-		builder.scheme("http")
+		builder.scheme("https")
 				.authority("www.maknoon.com")
 				.appendPath("audios.m4a");
 
@@ -1177,12 +1152,6 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 			builder.appendPath(token);
 
 		builder.appendPath(fileName + ".m4a");
-
-		/*
-		Uri trackUri = ContentUris.withAppendedId(
-				android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-				currSong);
-				*/
 
 		// Version 7
 		if (shortUrl)
@@ -1194,7 +1163,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 	public static String toURL(String path, String fileName, int seq, boolean shortUrl)
 	{
 		final Uri.Builder builder = new Uri.Builder();
-		builder.scheme("http")
+		builder.scheme("https")
 				.authority("www.maknoon.com")
 				.appendPath("audios.m4a.parts");
 
@@ -1228,7 +1197,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 	public static Uri toUri(String path)
 	{
 		final Uri.Builder builder = new Uri.Builder();
-		builder.scheme("http")
+		builder.scheme("https")
 				.authority("www.maknoon.com")
 				.appendPath("audios.m4a");
 
@@ -1378,11 +1347,11 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		if (msg.what == MSG_DB_INITIAT_DONE)
 		{
 			setUI();
-			dbInitiateDialog.dismiss();
 
-			//recreate(); // taking time so manually we will connect mediaBrowserCompat instead of onStart()
-			if (!mediaBrowserCompat.isConnected())
-				mediaBrowserCompat.connect();
+			if (exoPlayerView != null && mediaController != null)
+				exoPlayerView.setPlayer(mediaController);
+
+			dbInitiateDialog.dismiss();
 		}
 		return true;
 	}

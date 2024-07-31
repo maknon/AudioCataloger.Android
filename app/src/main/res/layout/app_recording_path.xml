@@ -2,7 +2,6 @@
 <androidx.appcompat.widget.LinearLayoutCompat
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools"
-	xmlns:app="http://schemas.android.com/apk/res-auto"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:orientation="vertical"
@@ -12,96 +11,48 @@
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content">
 
-		<androidx.appcompat.widget.AppCompatImageView
-			android:id="@+id/note_btn"
+		<androidx.appcompat.widget.AppCompatTextView
+			android:id="@+id/selectedFolderLabel"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_alignParentTop="true"
-			android:padding="15dp"
-			app:tint="@color/colorPrimary"
-			app:srcCompat="@drawable/baseline_save_alt_24"/>
-
-		<androidx.appcompat.widget.AppCompatTextView
-			android:id="@+id/note"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_toEndOf="@id/note_btn"
-			android:layout_marginStart="5dp"
-			android:layout_marginEnd="5dp"
-			android:layout_marginTop="18dp"
-			android:textColor="@color/colorPrimary"
+			android:layout_margin="5dp"
+			android:padding="10dp"
 			android:text="@string/recording_note"
 			android:textStyle="bold">
 		</androidx.appcompat.widget.AppCompatTextView>
 
-		<!--
-		<View
-			android:id="@+id/note_divider"
+		<androidx.appcompat.widget.AppCompatTextView
+			android:id="@+id/selectedFolder"
 			android:layout_width="match_parent"
-			android:layout_height="1dp"
-			android:layout_below="@id/note_btn"
-			android:background="@color/colorPrimaryLight"/>
-			-->
+			android:layout_height="wrap_content"
+			android:layout_below="@id/selectedFolderLabel"
+			android:ellipsize="start"
+			android:scrollHorizontally="true"
+			android:textColor="?attr/colorPrimaryDark"
+			android:layoutDirection="ltr"
+			android:layout_margin="5dp"/>
+
+		<androidx.appcompat.widget.AppCompatTextView
+			android:id="@+id/appDefaultFolders"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_below="@id/selectedFolder"
+			android:layout_margin="5dp"
+			android:padding="10dp"
+			android:text="@string/app_folders"
+			android:textStyle="bold">
+		</androidx.appcompat.widget.AppCompatTextView>
 
 		<ListView
 			android:id="@+id/storageList"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:layout_margin="5dp"
-			android:divider="@color/colorPrimary"
+			android:divider="?attr/colorPrimaryDark"
 			android:dividerHeight="1dp"
 			android:background="@drawable/listview_border"
-			android:layout_below="@id/note_btn"/>
-
-		<!--
-		<View
-			android:id="@+id/divider2"
-			android:layout_width="match_parent"
-			android:layout_height="1dp"
-			android:layout_below="@+id/storageList"
-			android:background="@color/colorPrimaryLight"/>
-			-->
-
-		<androidx.appcompat.widget.AppCompatTextView
-			android:id="@+id/txtvSelectedFolderLabel"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_below="@id/storageList"
-			android:layout_margin="5dp"
-			android:textColor="@color/colorPrimary"
-			android:text="@string/selected_folder"
-			android:textStyle="bold">
-		</androidx.appcompat.widget.AppCompatTextView>
-
-		<androidx.appcompat.widget.AppCompatTextView
-			android:id="@+id/txtvSelectedFolder"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_below="@id/txtvSelectedFolderLabel"
-			android:ellipsize="start"
-			android:scrollHorizontally="true"
-			android:textColor="@color/colorPrimary"
-			android:layoutDirection="ltr"
-			android:layout_margin="5dp"/>
-
-		<com.google.android.material.button.MaterialButton
-			android:id="@+id/openFolder"
-			style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_below="@+id/txtvSelectedFolder"
-			android:layout_marginStart="30dp"
-			android:layout_marginEnd="30dp"
-			android:text="@string/open_folder"
-			android:textColor="@color/colorPrimary"
-			app:backgroundTint="@android:color/transparent"
-			app:cornerRadius="15dp"
-			app:icon="@drawable/outline_folder_open_24"
-			app:iconGravity="textStart"
-			app:iconTint="@color/colorPrimary"
-			app:rippleColor="?attr/colorControlHighlight"
-			app:strokeColor="@color/colorPrimary"
-			app:strokeWidth="1dp" />
+			android:layout_below="@id/appDefaultFolders"/>
 
 		<!--
 			it causes crash in samsung n2 kitkat
@@ -115,7 +66,7 @@
 			android:id="@+id/divider"
 			android:layout_width="match_parent"
 			android:layout_height="1dp"
-			android:layout_below="@id/openFolder"
+			android:layout_below="@id/storageList"
 			android:background="?android:attr/listDivider"/>
 
 	</RelativeLayout>

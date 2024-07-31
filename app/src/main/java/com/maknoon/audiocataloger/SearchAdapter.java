@@ -16,6 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 public class SearchAdapter extends ArrayAdapter<SearchNodeInfo>
 {
 	private final Context context;
@@ -95,9 +97,8 @@ public class SearchAdapter extends ArrayAdapter<SearchNodeInfo>
 					textview.setText(feqhArrayList[position].tafreeg);
 					*/
 
-					final AlertDialog.Builder ad = new AlertDialog.Builder(context);
-					ad
-							.setMessage(searchArrayList[position].tafreeg)
+					final MaterialAlertDialogBuilder ad = new MaterialAlertDialogBuilder(context);
+					ad.setMessage(searchArrayList[position].tafreeg)
 							.setCancelable(false)
 							.setTitle("تفريغ الفهرسة")
 							.setPositiveButton("إغلاق", new DialogInterface.OnClickListener()

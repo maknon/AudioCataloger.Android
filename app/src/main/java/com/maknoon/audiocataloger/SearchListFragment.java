@@ -206,7 +206,7 @@ public class SearchListFragment extends ListFragment
 				final String path = mCursor1.getString(mCursor1.getColumnIndexOrThrow("Path"));
 				mCursor1.close();
 
-				values[i] = new SearchNodeInfo(line, offset, duration, sheekh_name, book_name, title, fileName, path, input.trim(), tafreeg, seq);
+				values[i] = new SearchNodeInfo(mainContext, line, offset, duration, sheekh_name, book_name, title, fileName, path, input.trim(), tafreeg, seq);
 				mCursor.moveToNext();
 			}
 			mCursor.close();

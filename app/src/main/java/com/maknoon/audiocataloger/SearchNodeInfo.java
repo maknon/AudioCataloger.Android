@@ -1,11 +1,16 @@
 package com.maknoon.audiocataloger;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 
 import static com.maknoon.audiocataloger.MainActivity.Urlshortener_firebase;
+
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.color.MaterialColors;
 
 class SearchNodeInfo
 {
@@ -23,7 +28,7 @@ class SearchNodeInfo
 
 	public final Spannable HTMLString; // Version 4
 
-	SearchNodeInfo(String line, int offset, int duration, String sheekh_name, String book_name, String title, String fileName, String path, String input, String tafreeg, int seq)
+	SearchNodeInfo(Context ctx, String line, int offset, int duration, String sheekh_name, String book_name, String title, String fileName, String path, String input, String tafreeg, int seq)
 	{
 		this.line = line;
 		this.offset = offset;
@@ -61,12 +66,13 @@ class SearchNodeInfo
 			int index = ref.indexOf(term);
 			while (index >= 0)
 			{
-				HTMLString.setSpan(new ForegroundColorSpan(Color.parseColor("#800000")), index, index + term.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				//HTMLString.setSpan(new ForegroundColorSpan(Color.parseColor("#800000")), index, index + term.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				HTMLString.setSpan(new ForegroundColorSpan(ContextCompat.getColor(ctx, R.color.colorPrimaryDark)), index, index + term.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 				index = ref.indexOf(term, index + 1);
 			}
 		}
 
-		HTMLString.setSpan(new ForegroundColorSpan(Color.parseColor("#800000")), ref.length(), HTMLString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		HTMLString.setSpan(new ForegroundColorSpan(ContextCompat.getColor(ctx, R.color.colorPrimaryDark)), ref.length(), HTMLString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 	}
 
 	public String shareWith()

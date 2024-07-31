@@ -7,7 +7,6 @@
     <string name="description">رجوع إلى القسم الأعلى</string>
     <string name="logo">الشعار</string>
     <string name="recording_title">اختر مجلد</string>
-    <string name="recordingNotification">تنبيه: سيتم إزالة الملفات بإزالة البرنامج إذا كانت في الذاكرة الخارجية</string>
     <string name="recording_folder_error">لا يمكنك استخدام هذا المجلد. قم باختيار مجلد آخر</string>
     <string name="create_folder">مجلد جديد</string>
     <string name="ok">موافق</string>
@@ -17,9 +16,9 @@
     <string name="create_folder_empty">إدخال فارغ. لا يمكن إنشاء المجلد</string>
     <string name="cancel">إلغاء</string>
     <string name="save">حفظ</string>
-    <string name="recording_note">عند تحميل الصوتيات سيتم تخزينها في المسار أدناه</string>
+    <string name="recording_note">عند تحميل الصوتيات سيتم تخزينها في المسار أدناه:</string>
     <string name="up">أعلى</string>
-    <string name="selected_folder">موضع حفظ التسجيل:</string>
+    <string name="app_folders">المسار المؤقت (سيتم إزالة الملفات بإزالة البرنامج):</string>
     <string name="open_folder">فتح المجلد</string>
     <string name="support">الشرح والدعم</string>
     <string name="audios_path">مسار الصوتيات</string>
@@ -28,6 +27,7 @@
     <string name="remove_all">إلغاء الكل</string>
     <string name="select_all">تحديد الكل</string>
     <string name="close">إغلاق</string>
+    <string name="uri_error">خطأ، قم باختيار مجلد آخر</string>
 
     <string name="default_notification_channel_id">audiocataloger_channel_id</string>
     <string name="default_notification_channel_name">مشغل الصوتيات</string>

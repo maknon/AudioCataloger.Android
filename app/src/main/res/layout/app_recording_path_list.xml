@@ -13,14 +13,12 @@
 		android:layout_height="wrap_content"
 		android:padding="15dp"
 		android:background="@android:color/transparent"
-		app:srcCompat="@drawable/outline_sd_card_24"
-		app:tint="@color/colorPrimary"/>
+		app:srcCompat="@drawable/outline_sd_card_24"/>
 
 	<androidx.appcompat.widget.AppCompatTextView
 		android:id="@+id/Itemname"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:textColor="@color/colorPrimary"
 		android:layoutDirection="ltr"
 		android:layout_margin="5dp"/>
 

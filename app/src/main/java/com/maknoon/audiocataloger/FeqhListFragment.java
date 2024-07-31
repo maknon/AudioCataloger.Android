@@ -182,7 +182,7 @@ public class FeqhListFragment extends ListFragment
 			{
 				final String category_name = mCursor1.getString(mCursor1.getColumnIndexOrThrow("Category_name"));
 				final int category_id = mCursor1.getInt(mCursor1.getColumnIndexOrThrow("Category_id"));
-				values[i] = new FeqhNodeInfo(false, category_id, category_name, id, -1, -1, -1, -1, null, null, null, null, null, null, null);
+				values[i] = new FeqhNodeInfo(mainContext, false, category_id, category_name, id, -1, -1, -1, -1, null, null, null, null, null, null, null);
 				mCursor1.moveToNext();
 			}
 		}
@@ -208,7 +208,7 @@ public class FeqhListFragment extends ListFragment
 				final String path = mCursor3.getString(mCursor3.getColumnIndexOrThrow("Path"));
 				mCursor3.close();
 
-				values[i] = new FeqhNodeInfo(true, -1, null, id, code, offset, duration, seq, line, tafreeg, sheekh_name, book_name, title, fileName, path);
+				values[i] = new FeqhNodeInfo(mainContext, true, -1, null, id, code, offset, duration, seq, line, tafreeg, sheekh_name, book_name, title, fileName, path);
 				mCursor2.moveToNext();
 			}
 		}
@@ -284,7 +284,7 @@ public class FeqhListFragment extends ListFragment
 				final String category_name = mCursor1.getString(mCursor1.getColumnIndexOrThrow("Category_name"));
 				final int category_id = mCursor1.getInt(mCursor1.getColumnIndexOrThrow("Category_id"));
 				//final int category_parent = parent = mCursor1.getInt(mCursor1.getColumnIndex("Category_parent"));
-				values[i] = new FeqhNodeInfo(false, category_id, category_name, parent, -1, -1, -1, -1, null, null, null, null, null, null, null);
+				values[i] = new FeqhNodeInfo(mainContext, false, category_id, category_name, parent, -1, -1, -1, -1, null, null, null, null, null, null, null);
 				mCursor1.moveToNext();
 			}
 		}
@@ -310,7 +310,7 @@ public class FeqhListFragment extends ListFragment
 				final String path = mCursor3.getString(mCursor3.getColumnIndexOrThrow("Path"));
 				mCursor3.close();
 
-				values[i] = new FeqhNodeInfo(true, -1, null, id, code, offset, duration, seq, line, tafreeg, sheekh_name, book_name, title, fileName, path);
+				values[i] = new FeqhNodeInfo(mainContext, true, -1, null, id, code, offset, duration, seq, line, tafreeg, sheekh_name, book_name, title, fileName, path);
 				mCursor2.moveToNext();
 			}
 		}

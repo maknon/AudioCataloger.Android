@@ -73,24 +73,24 @@ public class FavoriteListFragment extends ListFragment
 
 	void displayFavoriteList()
 	{
-			/* Not working, http://stackoverflow.com/questions/32157862/set-add-in-android-sharedpreferences-is-not-working-as-expected
-			final SharedPreferences favoriteList = context.getSharedPreferences("favoriteList", MODE_PRIVATE);
+		/* Not working, http://stackoverflow.com/questions/32157862/set-add-in-android-sharedpreferences-is-not-working-as-expected
+		final SharedPreferences favoriteList = context.getSharedPreferences("favoriteList", MODE_PRIVATE);
 
-			final Set<String> reference = favoriteList.getStringSet("reference", new HashSet<String>());
-			final Set<String> path = favoriteList.getStringSet("path", new HashSet<String>());
-			final Set<String> fileName = favoriteList.getStringSet("fileName", new HashSet<String>());
-			final Set<String> offset = favoriteList.getStringSet("offset", new HashSet<String>());
+		final Set<String> reference = favoriteList.getStringSet("reference", new HashSet<String>());
+		final Set<String> path = favoriteList.getStringSet("path", new HashSet<String>());
+		final Set<String> fileName = favoriteList.getStringSet("fileName", new HashSet<String>());
+		final Set<String> offset = favoriteList.getStringSet("offset", new HashSet<String>());
 
-			final Iterator<String> ref = reference.iterator();
-			final Iterator<String> pa = path.iterator();
-			final Iterator<String> fi = fileName.iterator();
-			final Iterator<String> of = offset.iterator();
+		final Iterator<String> ref = reference.iterator();
+		final Iterator<String> pa = path.iterator();
+		final Iterator<String> fi = fileName.iterator();
+		final Iterator<String> of = offset.iterator();
 
-			Log.v("maknoon:Main", "displayFavoriteList: "+reference.size());
-			Log.v("maknoon:Main", "displayFavoriteList: "+path.size());
-			Log.v("maknoon:Main", "displayFavoriteList: "+fileName.size());
-			Log.v("maknoon:Main", "displayFavoriteList: "+offset.size());
-			*/
+		Log.v("maknoon:Main", "displayFavoriteList: "+reference.size());
+		Log.v("maknoon:Main", "displayFavoriteList: "+path.size());
+		Log.v("maknoon:Main", "displayFavoriteList: "+fileName.size());
+		Log.v("maknoon:Main", "displayFavoriteList: "+offset.size());
+		*/
 
 		final DBHelper mDbHelper = new DBHelper(mainContext);
 		final SQLiteDatabase db = mDbHelper.getReadableDatabase();

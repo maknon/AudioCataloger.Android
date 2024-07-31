@@ -20,6 +20,8 @@ import android.widget.ArrayAdapter;
 
 import static com.maknoon.audiocataloger.MainActivity.Urlshortener_firebase;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 public class FeqhAdapter extends ArrayAdapter<FeqhNodeInfo>
 {
 	private final Context context;
@@ -118,9 +120,8 @@ public class FeqhAdapter extends ArrayAdapter<FeqhNodeInfo>
 						textview.setText(feqhArrayList[position].tafreeg);
 						*/
 
-						final AlertDialog.Builder ad = new AlertDialog.Builder(context);
-						ad
-								.setMessage(feqhArrayList[position].tafreeg)
+						final MaterialAlertDialogBuilder ad = new MaterialAlertDialogBuilder(context);
+						ad.setMessage(feqhArrayList[position].tafreeg)
 								.setCancelable(false)
 								.setTitle("تفريغ الفهرسة")
 								.setPositiveButton("إغلاق", new DialogInterface.OnClickListener()

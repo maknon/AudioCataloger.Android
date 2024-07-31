@@ -1,5 +1,9 @@
 package com.maknoon.audiocataloger;
 
+import android.content.Context;
+
+import com.google.android.material.color.MaterialColors;
+
 public class FeqhNodeInfo
 {
 	public final int category_id;
@@ -22,7 +26,7 @@ public class FeqhNodeInfo
 
 	public final String HTMLString; // Version 4
 
-	FeqhNodeInfo(boolean isIndex, int Category_id, String Category_name, int Category_parent, int code, int offset, int duration, int seq, String line, String tafreeg, String sheekh_name, String book_name, String title, String fileName, String path)
+	FeqhNodeInfo(Context ctx, boolean isIndex, int Category_id, String Category_name, int Category_parent, int code, int offset, int duration, int seq, String line, String tafreeg, String sheekh_name, String book_name, String title, String fileName, String path)
 	{
 		// For category
 		this.isIndex = isIndex;
@@ -56,10 +60,11 @@ public class FeqhNodeInfo
 			dur = "[" + minute + ':' + second + "] ";
 		}
 
+		final int c = MaterialColors.getColor(ctx, R.attr.colorPrimaryDark, ctx.getResources().getColor(android.R.color.holo_red_light));
 		if (isIndex && book_name.equals(title))
-			HTMLString = dur + line + " <font color='maroon'>" + sheekh_name + "←" + book_name + "←" + fileName + "</font>";
+			HTMLString = dur + line + " <font color='" + String.format("#%06X", (0xFFFFFF & c)) + "'>" + sheekh_name + "←" + book_name + "←" + fileName + "</font>";
 		else
-			HTMLString = dur + line + " <font color='maroon'>" + sheekh_name + "←" + book_name + "←" + title + "←" + fileName + "</font>";
+			HTMLString = dur + line + " <font color='" + String.format("#%06X", (0xFFFFFF & c)) + "'>" + sheekh_name + "←" + book_name + "←" + title + "←" + fileName + "</font>";
 	}
 
 	public String shareWith()

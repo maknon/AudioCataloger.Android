@@ -4,6 +4,9 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AudioCataloger.Android.iml" filepath="$PROJECT_DIR$/AudioCataloger.Android.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AudioCataloger.Android.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AudioCataloger.Android.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AudioCataloger.Android.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AudioCataloger.Android.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AudioCataloger.Android.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AudioCataloger.Android.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/AudioCataloger.Android.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/AudioCataloger.Android.app.unitTest.iml" />
     </modules>
   </component>
 </project>

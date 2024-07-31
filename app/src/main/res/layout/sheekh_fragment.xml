@@ -17,7 +17,7 @@
         android:layout_width="fill_parent"
         android:layout_height="1dp"
         android:layout_below="@id/listHeader"
-        android:background="#c0c0c0"/>
+        android:background="?android:attr/listDivider"/>
 
     <ListView
         android:id="@android:id/list"

@@ -21,6 +21,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 class SheekhAdapter<T extends SheekhInterface> extends ArrayAdapter<T>
 {
 	private static final String TAG = "SheekhAdapter";
@@ -97,9 +99,8 @@ class SheekhAdapter<T extends SheekhInterface> extends ArrayAdapter<T>
 					@Override
 					public void onClick(View arg0)
 					{
-						final AlertDialog.Builder ad = new AlertDialog.Builder(context);
-						ad
-								.setMessage(sheekhArrayList[position].getTafreeg())
+						final MaterialAlertDialogBuilder ad = new MaterialAlertDialogBuilder(context);
+						ad.setMessage(sheekhArrayList[position].getTafreeg())
 								.setCancelable(false)
 								.setTitle("تفريغ الفهرسة")
 								.setPositiveButton("إغلاق", new DialogInterface.OnClickListener()
@@ -182,7 +183,7 @@ class SheekhAdapter<T extends SheekhInterface> extends ArrayAdapter<T>
 							downloadButton.setEnabled(false);
 							downloadButton.invalidate();
 
-							((MainActivity) context).downloadAudioFile(request); // TODO, replace with a broadcast to the mainactivity and initiate this from the MainActivity
+							((MainActivity) context).downloadAudioFile(request); // TODO, replace with a broadcast to the MainActivity and initiate this from the MainActivity
 						}
 					});
 				}

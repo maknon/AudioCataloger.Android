@@ -4,6 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".AppRecordingPath">
     <item
+        android:id="@+id/openFolder"
+        android:title="@string/open_folder"
+        android:icon="@drawable/outline_folder_open_24"
+        app:showAsAction="always"/>
+    <item
         android:id="@+id/create_folder"
         android:title="@string/create_folder"
         android:icon="@drawable/outline_create_new_folder_24"

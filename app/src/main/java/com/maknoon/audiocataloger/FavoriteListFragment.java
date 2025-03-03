@@ -67,8 +67,8 @@ public class FavoriteListFragment extends ListFragment
 	public void onListItemClick(@NonNull ListView l, @NonNull View v, int position, long id)
 	{
 		final FavoriteNodeInfo node = (FavoriteNodeInfo) getListAdapter().getItem(position);
-		playCallback.play(node.offset, -1, toURL_File(node.path, node.fileName), node.reference, node.fileName);
-		setCurrentChapter(node.reference, node.fileName, node.path, mainContext);
+		playCallback.play(node.offset, -1, toURL_File(node.path, node.fileName, node.code), node.reference, node.fileName);
+		setCurrentChapter(node.reference, node.fileName, node.path, mainContext, node.code);
 	}
 
 	void displayFavoriteList()
@@ -105,13 +105,14 @@ public class FavoriteListFragment extends ListFragment
 				final String fileName = mCursor.getString(mCursor.getColumnIndexOrThrow("FileName"));
 				final int Offset = mCursor.getInt(mCursor.getColumnIndexOrThrow("Offset"));
 				final int rowid = mCursor.getInt(mCursor.getColumnIndexOrThrow("rowid"));
+				final int code = mCursor.getInt(mCursor.getColumnIndexOrThrow("Code"));
 
 				final String hour = String.valueOf(Offset / 3600 / 1000);
 				final String minute = String.valueOf(Offset / 60 / 1000 - (Offset / 3600 / 1000) * 60);
 				final String second = String.valueOf(Offset / 1000 - ((int) ((float) Offset / 60F / 1000F) * 60));
 				reference = "[" + hour + ":" + minute + ":" + second + "] " + reference;
 
-				values[i] = new FavoriteNodeInfo(reference, Offset, fileName, path, rowid);
+				values[i] = new FavoriteNodeInfo(reference, Offset, fileName, path, rowid, code);
 				mCursor.moveToNext();
 			}
 		}

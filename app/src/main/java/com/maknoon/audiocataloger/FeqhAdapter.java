@@ -18,8 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
-import static com.maknoon.audiocataloger.MainActivity.Urlshortener_firebase;
-
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class FeqhAdapter extends ArrayAdapter<FeqhNodeInfo>
@@ -83,7 +81,7 @@ public class FeqhAdapter extends ArrayAdapter<FeqhNodeInfo>
 							{
 								final Intent sendIntent = new Intent();
 								sendIntent.setAction(Intent.ACTION_SEND);
-								sendIntent.putExtra(Intent.EXTRA_TEXT, feqhArrayList[position].shareWith() + "\n" + MainActivity.toURL(feqhArrayList[position].path, feqhArrayList[position].fileName, feqhArrayList[position].seq, true) + "\n" + "أو يمكن الاستماع إلى الشريط كاملا (الفتوى تبدأ من " + offset + ")" + "\n" + MainActivity.toURL(feqhArrayList[position].path, feqhArrayList[position].fileName, true) + "\n" + "برنامج مفهرس المحاضرات. للتحميل:" + "\n" + Urlshortener_firebase("https://play.google.com/store/apps/details?id=com.maknoon.audiocataloger"));
+								sendIntent.putExtra(Intent.EXTRA_TEXT, feqhArrayList[position].shareWith() + "\n" + MainActivity.toURL(feqhArrayList[position].path, feqhArrayList[position].fileName, feqhArrayList[position].seq, feqhArrayList[position].code, true) + "\n" + "أو يمكن الاستماع إلى الشريط كاملا (الفتوى تبدأ من " + offset + ")" + "\n" + MainActivity.toURL(feqhArrayList[position].path, feqhArrayList[position].fileName, feqhArrayList[position].code, true) + "\n" + "برنامج مفهرس المحاضرات. للتحميل:" + "\n" + "https://fiqh.cc/?app");
 								sendIntent.setType("text/plain");
 								context.startActivity(sendIntent);
 							}

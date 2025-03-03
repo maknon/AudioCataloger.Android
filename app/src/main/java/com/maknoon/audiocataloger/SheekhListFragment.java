@@ -152,15 +152,15 @@ public class SheekhListFragment extends ListFragment
 						{
 							if (index.book.equals(index.title))
 							{
-								playCallback.play(index.offset, index.duration, toURL_File(index.path, index.fileName), index.sheekh_name, index.book + "←" + index.fileName);
-								setCurrentChapter(index.sheekh_name + "←" + index.book + "←" + index.fileName, index.fileName, index.path, mainContext);
+								playCallback.play(index.offset, index.duration, toURL_File(index.path, index.fileName, index.code), index.sheekh_name, index.book + "←" + index.fileName);
+								setCurrentChapter(index.sheekh_name + "←" + index.book + "←" + index.fileName, index.fileName, index.path, mainContext, index.code);
 							}
 							else
 							{
-								playCallback.play(index.offset, index.duration, toURL_File(index.path, index.fileName), index.sheekh_name, index.book + "←" + index.title + "←" + index.fileName);
+								playCallback.play(index.offset, index.duration, toURL_File(index.path, index.fileName, index.code), index.sheekh_name, index.book + "←" + index.title + "←" + index.fileName);
 
 								// This will work for multi_volume as well since title = sub_book in all cases when multi_volume = true
-								setCurrentChapter(index.sheekh_name + "←" + index.book + "←" + index.title + "←" + index.fileName, index.fileName, index.path, mainContext);
+								setCurrentChapter(index.sheekh_name + "←" + index.book + "←" + index.title + "←" + index.fileName, index.fileName, index.path, mainContext, index.code);
 							}
 						}
 					}
@@ -592,13 +592,13 @@ public class SheekhListFragment extends ListFragment
 			{
 				if (book.equals(title))
 				{
-					playCallback.play(0, -1, toURL_File(path, fileName), sheekh_name, book + "←" + fileName);
-					setCurrentChapter(sheekh_name + "←" + book + "←" + fileName, fileName, path, mainContext);
+					playCallback.play(0, -1, toURL_File(path, fileName, code), sheekh_name, book + "←" + fileName);
+					setCurrentChapter(sheekh_name + "←" + book + "←" + fileName, fileName, path, mainContext, code);
 				}
 				else
 				{
-					playCallback.play(0, -1, toURL_File(path, fileName), sheekh_name, book + "←" + title + "←" + fileName);
-					setCurrentChapter(sheekh_name + "←" + book + "←" + title + "←" + fileName, fileName, path, mainContext);
+					playCallback.play(0, -1, toURL_File(path, fileName, code), sheekh_name, book + "←" + title + "←" + fileName);
+					setCurrentChapter(sheekh_name + "←" + book + "←" + title + "←" + fileName, fileName, path, mainContext, code);
 				}
 			}
 		}

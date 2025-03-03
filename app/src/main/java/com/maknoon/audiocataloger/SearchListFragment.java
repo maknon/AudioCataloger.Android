@@ -134,13 +134,13 @@ public class SearchListFragment extends ListFragment
 		final SearchNodeInfo node = (SearchNodeInfo) getListAdapter().getItem(position);
 		if (node.book_name.equals(node.title))
 		{
-			playCallback.play(node.offset, node.duration, toURL_File(node.path, node.fileName), node.sheekh_name, node.book_name + "←" + node.fileName);
-			setCurrentChapter(node.sheekh_name + "←" + node.book_name + "←" + node.fileName, node.fileName, node.path, mainContext);
+			playCallback.play(node.offset, node.duration, toURL_File(node.path, node.fileName, node.code), node.sheekh_name, node.book_name + "←" + node.fileName);
+			setCurrentChapter(node.sheekh_name + "←" + node.book_name + "←" + node.fileName, node.fileName, node.path, mainContext, node.code);
 		}
 		else
 		{
-			playCallback.play(node.offset, node.duration, toURL_File(node.path, node.fileName), node.sheekh_name, node.book_name + "←" + node.title + "←" + node.fileName);
-			setCurrentChapter(node.sheekh_name + "←" + node.book_name + "←" + node.title + "←" + node.fileName, node.fileName, node.path, mainContext);
+			playCallback.play(node.offset, node.duration, toURL_File(node.path, node.fileName, node.code), node.sheekh_name, node.book_name + "←" + node.title + "←" + node.fileName);
+			setCurrentChapter(node.sheekh_name + "←" + node.book_name + "←" + node.title + "←" + node.fileName, node.fileName, node.path, mainContext, node.code);
 		}
 	}
 
@@ -206,7 +206,7 @@ public class SearchListFragment extends ListFragment
 				final String path = mCursor1.getString(mCursor1.getColumnIndexOrThrow("Path"));
 				mCursor1.close();
 
-				values[i] = new SearchNodeInfo(mainContext, line, offset, duration, sheekh_name, book_name, title, fileName, path, input.trim(), tafreeg, seq);
+				values[i] = new SearchNodeInfo(mainContext, line, offset, duration, sheekh_name, book_name, title, fileName, path, input.trim(), tafreeg, seq, code);
 				mCursor.moveToNext();
 			}
 			mCursor.close();

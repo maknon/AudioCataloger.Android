@@ -24,7 +24,6 @@ import android.os.Message;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
-import androidx.appcompat.app.ActionBar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Lifecycle;
@@ -45,14 +44,12 @@ import androidx.media3.ui.PlayerControlView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import androidx.appcompat.app.AppCompatDelegate;
 
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
@@ -61,8 +58,6 @@ import android.widget.Toast;
 
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
-import com.google.firebase.dynamiclinks.ShortDynamicLink;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -203,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		// Register here to be running all the time while the app is running, to avoid unregister it if app is swapped by other application. DownloadManager will continue in all cases and the receive broadcast will be lost and the file will not be renamed from *.m4a.part -> *.m4a
 		//LocalBroadcastManager.getInstance(this).registerReceiver(); will not work
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-			registerReceiver(DownloadReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_NOT_EXPORTED);
+			registerReceiver(DownloadReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_EXPORTED);
 		else
 			registerReceiver(DownloadReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 
@@ -333,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		to act as the saveFavorite/bookmark button, but it enable and disable the button based on the playlist, hence it is not suitable.
 		Replaced with normal button in the layout. We are adding a dummy MediaItem to enable the next button and override its action
 		*/
-		exoPlayerView.findViewById(R.id.exo_next).setVisibility(View.GONE);
+		exoPlayerView.findViewById(androidx.media3.ui.R.id.exo_next).setVisibility(View.GONE);
 		bookmarkButton = exoPlayerView.findViewById(R.id.exo_bookmark);
 		bookmarkButton.setEnabled(false);
 		bookmarkButton.setAlpha(33f / 100); // https://github.com/androidx/media/blob/main/libraries/ui/src/main/res/values/constants.xml
@@ -346,9 +341,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 			}
 		});
 
-		final ActionBar ab = getSupportActionBar();
-		if (ab != null)
-			ab.setTitle(R.string.app_name);
+		((MaterialToolbar)findViewById(R.id.toolbar)).setOnMenuItemClickListener(this::onMenuItemSelected);
 
 		final DBHelper mDbHelper = new DBHelper(this);
 		final SQLiteDatabase db = mDbHelper.getReadableDatabase();
@@ -485,24 +478,10 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		}
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(@NonNull Menu menu)
-	{
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.menu_main, menu);
-		return true;
-	}
-
 	//AlertDialog directoryDialog;
 	//ListView directoryList;
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item)
+	public boolean onMenuItemSelected(MenuItem item)
 	{
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-
 		switch (item.getItemId())
 		{
 			case R.id.search_range:
@@ -954,52 +933,6 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 			super.onBackPressed();
 	}
 
-	public static String Urlshortener_firebase(final String URL)
-	{
-		try
-		{
-			final Task<ShortDynamicLink> shortLinkTask = FirebaseDynamicLinks.getInstance().createDynamicLink()
-					.setLink(Uri.parse(URL))
-					.setDomainUriPrefix("https://montaqa.com")
-					// Open links with this app on Android
-					//.setAndroidParameters(new DynamicLink.AndroidParameters.Builder().build())
-					// Open links with com.example.ios on iOS
-					//.setIosParameters(new DynamicLink.IosParameters.Builder("com.example.ios").build())
-					.buildShortDynamicLink(ShortDynamicLink.Suffix.SHORT);
-					/* TODO: this is the best implementation to not wait for the result
-					.addOnCompleteListener(this, new OnCompleteListener<ShortDynamicLink>()
-					{
-						@Override
-						public void onComplete(@NonNull Task<ShortDynamicLink> task)
-						{
-							if (task.isSuccessful())
-							{
-								// Short link created
-								Uri shortLink = task.getResult().getShortLink();
-								Uri flowchartLink = task.getResult().getPreviewLink();
-							}
-							else
-							{
-								// Error
-							}
-						}
-					});
-			 		*/
-
-			//final ShortDynamicLink authResult = Tasks.await(shortLinkTask, 1500, TimeUnit.MILLISECONDS);
-			final ShortDynamicLink authResult = Tasks.await(shortLinkTask);
-			final Uri shortLink = authResult.getShortLink();
-			//final Uri flowchartLink = authResult.getPreviewLink();
-
-			return shortLink != null ? shortLink.toString() : URL;
-		}
-		catch (ExecutionException | InterruptedException e)
-		{
-			Log.e(TAG, e.getMessage(), e);
-			return URL;
-		}
-	}
-
 	@Override
 	protected void onPause()
 	{
@@ -1099,6 +1032,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 				values.put("Reference", currentChapter.getString("reference", null));
 				values.put("path", currentChapter.getString("path", null));
 				values.put("FileName", currentChapter.getString("fileName", null));
+				values.put("Code", currentChapter.getInt("code", 0));
 				values.put("Offset", mediaController.getCurrentPosition());
 
 				final DBHelper mDbHelper = new DBHelper(this);
@@ -1111,17 +1045,18 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		}
 	}
 
-	static void setCurrentChapter(String reference, String fileName, String path, Context context)
+	static void setCurrentChapter(String reference, String fileName, String path, Context context, int code)
 	{
 		final SharedPreferences currentChapter = context.getSharedPreferences("currentChapter", MODE_PRIVATE);
 		final SharedPreferences.Editor editor = currentChapter.edit();
 		editor.putString("reference", reference);
 		editor.putString("path", path);
 		editor.putString("fileName", fileName);
+		editor.putInt("code", code);
 		editor.apply();
 	}
 
-	public static String toURL(String path, String fileName, boolean shortUrl)
+	public static String toURL(String path, String fileName, int code, boolean shortUrl)
 	{
 		/*
 		// Can be replaced by Uri.Builder
@@ -1155,12 +1090,12 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 
 		// Version 7
 		if (shortUrl)
-			return Urlshortener_firebase(builder.build().toString());
+			return "https://fiqh.cc/?" + code;
 		else
 			return builder.build().toString();
 	}
 
-	public static String toURL(String path, String fileName, int seq, boolean shortUrl)
+	public static String toURL(String path, String fileName, int seq, int code, boolean shortUrl)
 	{
 		final Uri.Builder builder = new Uri.Builder();
 		builder.scheme("https")
@@ -1174,12 +1109,12 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 		builder.appendPath(seq + ".m4a");
 
 		if (shortUrl) // Version 7
-			return Urlshortener_firebase(builder.build().toString());
+			return "https://fiqh.cc/?" + code + "," + seq;
 		else
 			return builder.build().toString();
 	}
 
-	public static String toURL_File(final String path, final String fileName)
+	public static String toURL_File(final String path, final String fileName, int code)
 	{
 		if (sdPath == null)
 			Log.e(TAG,"App does not have any place to save files! Restart App");
@@ -1191,7 +1126,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 				return f.toString();
 		}
 
-		return toURL(path, fileName, false);
+		return toURL(path, fileName, code, false);
 	}
 
 	public static Uri toUri(String path)
@@ -1351,7 +1286,8 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback,
 			if (exoPlayerView != null && mediaController != null)
 				exoPlayerView.setPlayer(mediaController);
 
-			dbInitiateDialog.dismiss();
+			if(!isDestroyed() && dbInitiateDialog != null  && dbInitiateDialog.isShowing())
+				dbInitiateDialog.dismiss();
 		}
 		return true;
 	}

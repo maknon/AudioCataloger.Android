@@ -6,9 +6,9 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Html;
 import android.text.InputType;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.AppCompatTextView;
 
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 // https://rogerkeays.com/simple-android-file-chooser
@@ -36,7 +36,9 @@ public class AppRecordingPath extends AppCompatActivity
 
 	final String TAG = "AppRecordingPath";
 
-	static final String PARENT_DIR = "..";
+	//final static String PARENT_DIR = "..";
+	final static String PARENT_DIR = Html.fromHtml("&#x293A;").toString();
+	final static String folderIcon = Html.fromHtml("&#x1F4C1;") + " "; // https://www.compart.com/en/unicode/block/U+1F300
 
 	ArrayAdapter<String> directoryList;
 	ArrayAdapter<File> storageList;
@@ -55,16 +57,26 @@ public class AppRecordingPath extends AppCompatActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.app_recording_path);
-		setTitle(R.string.recording_title);
 
-		final ActionBar actionBar = getSupportActionBar();
-		if (actionBar != null)
-			actionBar.setDisplayHomeAsUpEnabled(true);
+		final MaterialToolbar toolbar = findViewById(R.id.toolbar);
+		toolbar.setOnMenuItemClickListener(this::onMenuItemSelected);
+		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				finish();
+			}
+		});
 
 		if (savedInstanceState == null)
 		{
 			final Intent intent = getIntent();
 			recordPath = intent.getStringExtra("sdPath");
+
+			if (recordPath == null)
+			{
+				Toast.makeText(this, "App does not have any place to save files! Restart App", Toast.LENGTH_LONG).show();
+				finish();
+			}
 		}
 
 		directoryList = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
@@ -77,7 +89,7 @@ public class AppRecordingPath extends AppCompatActivity
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long rowId)
 			{
-				final String fileChosen = directoryList.getItem(position);
+				String fileChosen = directoryList.getItem(position);
 				if (fileChosen != null)
 				{
 					if (fileChosen.equals(PARENT_DIR))
@@ -88,7 +100,7 @@ public class AppRecordingPath extends AppCompatActivity
 					}
 					else
 					{
-						final File chosenFile = new File(currentPath, fileChosen);
+						final File chosenFile = new File(currentPath, fileChosen.substring(3)); // substring to remove the folderIcon
 						if (chosenFile.isDirectory())
 							refresh(chosenFile);
 					}
@@ -158,7 +170,7 @@ public class AppRecordingPath extends AppCompatActivity
 			{
 				if (dirs != null)
 					for (File dir : dirs)
-						directoryList.add(dir.getName());
+						directoryList.add(folderIcon + dir.getName());
 			}
 			else
 			{
@@ -166,7 +178,7 @@ public class AppRecordingPath extends AppCompatActivity
 
 				if (dirs != null)
 					for (File dir : dirs)
-						directoryList.add(dir.getName());
+						directoryList.add(folderIcon + dir.getName());
 			}
 
 			// refresh the user interface
@@ -174,22 +186,8 @@ public class AppRecordingPath extends AppCompatActivity
 		}
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu)
+	public boolean onMenuItemSelected(@NonNull MenuItem item)
 	{
-		getMenuInflater().inflate(R.menu.app_recording_path, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(@NonNull MenuItem item)
-	{
-		if (item.getItemId() == android.R.id.home)
-		{
-			finish();
-			return true;
-		}
-
 		if (item.getItemId() == R.id.openFolder)
 		{
 			final Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);

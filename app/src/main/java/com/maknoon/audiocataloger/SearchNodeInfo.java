@@ -1,12 +1,10 @@
 package com.maknoon.audiocataloger;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
-
-import static com.maknoon.audiocataloger.MainActivity.Urlshortener_firebase;
+import android.util.TypedValue;
 
 import androidx.core.content.ContextCompat;
 
@@ -18,6 +16,7 @@ class SearchNodeInfo
 	public final int offset;
 	public final int seq;
 	public final int duration;
+	public final int code;
 	public final String sheekh_name;
 	public final String book_name;
 	public final String title;
@@ -28,7 +27,7 @@ class SearchNodeInfo
 
 	public final Spannable HTMLString; // Version 4
 
-	SearchNodeInfo(Context ctx, String line, int offset, int duration, String sheekh_name, String book_name, String title, String fileName, String path, String input, String tafreeg, int seq)
+	SearchNodeInfo(Context ctx, String line, int offset, int duration, String sheekh_name, String book_name, String title, String fileName, String path, String input, String tafreeg, int seq, int code)
 	{
 		this.line = line;
 		this.offset = offset;
@@ -41,6 +40,7 @@ class SearchNodeInfo
 		this.input = input;
 		this.tafreeg = tafreeg;
 		this.seq = seq;
+		this.code = code;
 
 		final String ref;
 		if (duration == -1)
@@ -60,6 +60,10 @@ class SearchNodeInfo
 		else
 			HTMLString = new SpannableString(ref + "  " + sheekh_name + "←" + book_name + "←" + title + "←" + fileName);
 
+		final TypedValue typedValue = new TypedValue();
+		ctx.getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, typedValue, true);
+		final int colorPrimary = ContextCompat.getColor(ctx, typedValue.resourceId);
+
 		final String[] search = input.split(" ");
 		for (String term : search)
 		{
@@ -67,12 +71,12 @@ class SearchNodeInfo
 			while (index >= 0)
 			{
 				//HTMLString.setSpan(new ForegroundColorSpan(Color.parseColor("#800000")), index, index + term.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-				HTMLString.setSpan(new ForegroundColorSpan(ContextCompat.getColor(ctx, R.color.colorPrimaryDark)), index, index + term.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				HTMLString.setSpan(new ForegroundColorSpan(colorPrimary), index, index + term.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 				index = ref.indexOf(term, index + 1);
 			}
 		}
 
-		HTMLString.setSpan(new ForegroundColorSpan(ContextCompat.getColor(ctx, R.color.colorPrimaryDark)), ref.length(), HTMLString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		HTMLString.setSpan(new ForegroundColorSpan(colorPrimary), ref.length(), HTMLString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 	}
 
 	public String shareWith()
@@ -83,9 +87,9 @@ class SearchNodeInfo
 		final String offset = "[" + hour + ":" + minute + ":" + second + "]";
 
 		if (book_name.equals(title))
-			return line + "\n" + sheekh_name + "←" + book_name + "←" + fileName + "\n" + MainActivity.toURL(path, fileName, seq, true) + "\n" + "أو يمكن الاستماع إلى الشريط كاملا (الفتوى تبدأ من " + offset + ")" + "\n" + MainActivity.toURL(path, fileName, true) + "\n" + "برنامج مفهرس المحاضرات. للتحميل:" + "\n" + Urlshortener_firebase("https://play.google.com/store/apps/details?id=com.maknoon.audiocataloger");
+			return line + "\n" + sheekh_name + "←" + book_name + "←" + fileName + "\n" + MainActivity.toURL(path, fileName, seq, code, true) + "\n" + "أو يمكن الاستماع إلى الشريط كاملا (الفتوى تبدأ من " + offset + ")" + "\n" + MainActivity.toURL(path, fileName, code, true) + "\n" + "برنامج مفهرس المحاضرات. للتحميل:" + "\n" + "https://fiqh.cc/?app";
 		else
-			return line + "\n" + sheekh_name + "←" + book_name + "←" + title + "←" + fileName + "\n" + MainActivity.toURL(path, fileName, seq, true) + "\n" + "أو يمكن الاستماع إلى الشريط كاملا (الفتوى تبدأ من " + offset + ")" + "\n" + MainActivity.toURL(path, fileName, true) + "\n" + "برنامج مفهرس المحاضرات. للتحميل:" + "\n" + Urlshortener_firebase("https://play.google.com/store/apps/details?id=com.maknoon.audiocataloger");
+			return line + "\n" + sheekh_name + "←" + book_name + "←" + title + "←" + fileName + "\n" + MainActivity.toURL(path, fileName, seq, code, true) + "\n" + "أو يمكن الاستماع إلى الشريط كاملا (الفتوى تبدأ من " + offset + ")" + "\n" + MainActivity.toURL(path, fileName, code, true) + "\n" + "برنامج مفهرس المحاضرات. للتحميل:" + "\n" + "https://fiqh.cc/?app";
 	}
 
 	public Spannable toHTMLString()

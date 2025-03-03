@@ -13,7 +13,8 @@ class DBHelper extends SQLiteOpenHelper
 
 	final static String DB_NAME = "database.db";
 	final static String DB_ATTACH_NAME = "contents.db";
-	final static int DB_VERSION = BuildConfig.VERSION_CODE; // It means we will upgrade the DB with every release
+	//final static int DB_VERSION = BuildConfig.VERSION_CODE; // It means we will upgrade the DB with every release
+	final static int DB_VERSION = 33;
 	final Context context;
 
 	DBHelper(final Context context)

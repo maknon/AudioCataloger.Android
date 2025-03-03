@@ -1,6 +1,9 @@
 package com.maknoon.audiocataloger;
 
 import android.content.Context;
+import android.util.TypedValue;
+
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.color.MaterialColors;
 
@@ -60,7 +63,12 @@ public class FeqhNodeInfo
 			dur = "[" + minute + ':' + second + "] ";
 		}
 
-		final int c = MaterialColors.getColor(ctx, R.attr.colorPrimaryDark, ctx.getResources().getColor(android.R.color.holo_red_light));
+		//final int c = MaterialColors.getColor(ctx, androidx.appcompat.R.attr.colorPrimary, ctx.getResources().getColor(android.R.color.holo_red_light));
+		//final int c = ctx.getResources().getColor(R.color.md_theme_primary);
+		final TypedValue typedValue = new TypedValue();
+		ctx.getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, typedValue, true);
+		final int c = ContextCompat.getColor(ctx, typedValue.resourceId);
+
 		if (isIndex && book_name.equals(title))
 			HTMLString = dur + line + " <font color='" + String.format("#%06X", (0xFFFFFF & c)) + "'>" + sheekh_name + "←" + book_name + "←" + fileName + "</font>";
 		else

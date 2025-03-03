@@ -1,6 +1,5 @@
 package com.maknoon.audiocataloger;
 
-import static com.maknoon.audiocataloger.MainActivity.Urlshortener_firebase;
 import static com.maknoon.audiocataloger.MainActivity.toURL;
 
 public class Index implements SheekhInterface
@@ -75,9 +74,9 @@ public class Index implements SheekhInterface
 		final String offset = "[" + hour + ":" + minute + ":" + second + "]";
 
 		if (book.equals(title))
-			return line + "\n" + sheekh_name + "←" + book + "←" + fileName + "\n" + toURL(path, fileName, seq, true) + "\n" + "أو يمكن الاستماع إلى الشريط كاملا (الفتوى تبدأ من " + offset + ")" + "\n" + toURL(path, fileName, true) + "\n" + "برنامج مفهرس المحاضرات. للتحميل:" + "\n" + Urlshortener_firebase("https://play.google.com/store/apps/details?id=com.maknoon.audiocataloger");
+			return line + "\n" + sheekh_name + "←" + book + "←" + fileName + "\n" + toURL(path, fileName, seq, code, true) + "\n" + "أو يمكن الاستماع إلى الشريط كاملا (الفتوى تبدأ من " + offset + ")" + "\n" + toURL(path, fileName, code, true) + "\n" + "برنامج مفهرس المحاضرات. للتحميل:" + "\n" + "https://fiqh.cc/?app";
 		else
-			return line + "\n" + sheekh_name + "←" + book + "←" + title + "←" + fileName + "\n" + toURL(path, fileName, seq, true) + "\n" + "أو يمكن الاستماع إلى الشريط كاملا (الفتوى تبدأ من " + offset + ")" + "\n" + toURL(path, fileName, true) + "\n" + "برنامج مفهرس المحاضرات. للتحميل:" + "\n" + Urlshortener_firebase("https://play.google.com/store/apps/details?id=com.maknoon.audiocataloger");
+			return line + "\n" + sheekh_name + "←" + book + "←" + title + "←" + fileName + "\n" + toURL(path, fileName, seq, code,true) + "\n" + "أو يمكن الاستماع إلى الشريط كاملا (الفتوى تبدأ من " + offset + ")" + "\n" + toURL(path, fileName, code, true) + "\n" + "برنامج مفهرس المحاضرات. للتحميل:" + "\n" + "https://fiqh.cc/?app";
 	}
 
 	@Override

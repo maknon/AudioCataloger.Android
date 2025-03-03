@@ -113,13 +113,13 @@ public class FeqhListFragment extends ListFragment
 
 			if (node.book_name.equals(node.title))
 			{
-				playCallback.play(node.offset, node.duration, toURL_File(node.path, node.fileName), node.sheekh_name, node.book_name + "←" + node.fileName);
-				setCurrentChapter(node.sheekh_name + "←" + node.book_name + "←" + node.fileName, node.fileName, node.path, mainContext);
+				playCallback.play(node.offset, node.duration, toURL_File(node.path, node.fileName, node.code), node.sheekh_name, node.book_name + "←" + node.fileName);
+				setCurrentChapter(node.sheekh_name + "←" + node.book_name + "←" + node.fileName, node.fileName, node.path, mainContext, node.code);
 			}
 			else
 			{
-				playCallback.play(node.offset, node.duration, toURL_File(node.path, node.fileName), node.sheekh_name, node.book_name + "←" + node.title + "←" + node.fileName);
-				setCurrentChapter(node.sheekh_name + "←" + node.book_name + "←" + node.title + "←" + node.fileName, node.fileName, node.path, mainContext);
+				playCallback.play(node.offset, node.duration, toURL_File(node.path, node.fileName, node.code), node.sheekh_name, node.book_name + "←" + node.title + "←" + node.fileName);
+				setCurrentChapter(node.sheekh_name + "←" + node.book_name + "←" + node.title + "←" + node.fileName, node.fileName, node.path, mainContext, node.code);
 			}
 		}
 		else

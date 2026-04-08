@@ -1,0 +1,29 @@
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
+
+    <item android:id="@+id/search_range"
+        android:orderInCategory="1"
+        android:icon="@drawable/outline_filter_alt_24"
+        android:title="@string/search_range"
+        app:showAsAction="ifRoom"/>
+
+    <item android:id="@+id/audios_path"
+        android:orderInCategory="2"
+        android:title="@string/audios_path"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/support"
+        android:orderInCategory="3"
+        android:title="@string/support"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/player"
+        android:title="@string/player"
+        android:orderInCategory="4"
+        android:icon="@drawable/baseline_play_circle_outline_24"
+        app:showAsAction="always" />
+</menu>

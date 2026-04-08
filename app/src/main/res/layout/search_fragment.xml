@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/search_src_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:hint="بحث ..."
+        android:inputType="text"
+        android:imeOptions="actionSearch"
+        android:singleLine="true">
+        <requestFocus />
+    </androidx.appcompat.widget.AppCompatEditText>
+    <!-- android:imeActionLabel="بحث" causing a lot of issues, it is not working in BB and is confusing with search suggestion and not working in simulator. you need to disable keyboard suggestion feature to work -->
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/search_button"
+        android:layout_alignEnd="@+id/search_src_text"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        app:srcCompat="@drawable/sharp_search_24"
+        android:focusable="false"
+        android:background="?android:attr/selectableItemBackground"
+        android:contentDescription="بحث"/>
+
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/search_src_text" />
+
+</RelativeLayout>
